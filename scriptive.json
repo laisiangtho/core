@@ -1,0 +1,54 @@
+{
+  "common": {
+    "name": "laisiangtho",
+    "version":"1.0.0",
+    "build": "1.0.0",
+    "library": {
+      "jquery.min.js":"http://code.jquery.com/jquery-3.1.1.min.js",
+      "jquery.ui.min.js":"http://code.jquery.com/ui/1.12.0/jquery-ui.min.js",
+      "jquery.ui.touch-punch.min.js": "https://raw.githubusercontent.com/furf/jquery-ui-touch-punch/master/jquery.ui.touch-punch.min.js",
+      "localforage.min.js":"https://mozilla.github.io/localForage/localforage.min.js",
+      "google-analytics-bundle.js":"https://raw.githubusercontent.com/GoogleChrome/chrome-platform-analytics/master/google-analytics-bundle.js"
+    },
+    "dist": {
+      "file": {
+        "fontmya": {
+          "(.*)": true
+        },
+        "laisiangtho": {
+          "([A-Z])": false
+        },
+        "lang": {
+          "^[a-z]{2}.json$": true,
+          "norwegian": "sure"
+        }
+      }
+    }
+  },
+  "individual": {
+    "chrome": {
+      "dev": {},
+      "dist": {}
+    },
+    "ios": {
+      "dev": {},
+      "dist": {}
+    },
+    "android": {
+      "dev": {},
+      "dist": {}
+    },
+    "default": {
+      "dev": {},
+      "dist": {}
+    },
+    "web": {
+      "dev": {},
+      "dist": {}
+    },
+    "electron": {
+      "dev": {},
+      "dist": {}
+    }
+  }
+}

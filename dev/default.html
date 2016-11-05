@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="initial-scale=1.0, user-scalable=no">
+<title>Lai Siangtho</title>
+<link rel="api" href="http://api.laisiangtho.com/"/>
+<link rel="icon" href="img/icon.png" type="image/png"/>
+<!-- <link rel="stylesheet" href="css/style.splash.css"> -->
+<link rel="stylesheet" href="font/laisiangtho.css">
+<link rel="stylesheet" href="css/style.css">
+<!-- <script src="lib/jquery.min.js"></script> -->
+<!-- <script src="lib/jquery.ui.min.js"></script> -->
+<!-- <script src="lib/jquery.ui.touch-punch.min.js"></script> -->
+<!--<script src="lib/jquery.mobile.custom.min.js"></script>-->
+<!-- <script src="lib/localforage.min.js"></script> -->
+<!--<script src="cordova.js"></script>-->
+<script src="lib/scriptive.min.js"></script>
+<script src="js/script.js"></script>
+<script>
+app.document({
+  config:{
+    // Meta:{script:['data bible','data config']},
+    Execute:[{'metalink':['api']},'load','handler','nomethod','color red','color gray normal'],
+    Device:'desktop',Platform:'web',
+    Handler:'click',On:'fO'
+  },
+  ready:function(){
+    this.config.msg.info = document.querySelector("li#msg");
+  }
+});
+</script>
+</head>
+<body id="l189">
+    <div>
+    	<div>
+        	<h1 title="1.0.0">Lai Siangtho</h1>
+        </div>
+        <div>
+        	<p>October 22, 2016  6:23</p>
+        </div>
+        <div>
+            <ol>
+                <li id="msg" title="...">a moment please!</li>
+            </ol>
+        </div>
+    </div>
+</body>
+</html>

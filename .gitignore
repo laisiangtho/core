@@ -35,3 +35,25 @@ jspm_packages
 
 # Optional REPL history
 .node_repl_history
+# =========================
+#CUSTOM
+# =========================
+public/*
+!public/*.md
+node_modules/
+backup
+nbproject
+delete
+output
+*tmp*/
+*delete.*
+*working.*
+*tmp.*
+*copy.*
+*job.*
+dev/lib/*.js
+dev/js/*.js
+dev/css/*.css
+dev/font/*
+!dev/font/*.json
+asset/*/*[0-9].*
