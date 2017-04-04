@@ -27,7 +27,7 @@ this.download=function(progressCallback){
         url: url,
         urlLocal: configuration.file.urlLocal.replace(/bId/,bId),
         before:function(xhr){
-          xhr.setRequestHeader("Access-Control-Allow-Origin", "*");
+          // xhr.setRequestHeader("Access-Control-Allow-Origin", "*");
           xhr.overrideMimeType('text/xml; charset=utf-8');
         },
         progress: progressCallback

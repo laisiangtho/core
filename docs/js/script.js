@@ -623,7 +623,7 @@
                             url: o,
                             urlLocal: n.file.urlLocal.replace(/bId/, t),
                             before: function(e) {
-                                e.setRequestHeader("Access-Control-Allow-Origin", "*"), e.overrideMimeType("text/xml; charset=utf-8");
+                                e.overrideMimeType("text/xml; charset=utf-8");
                             },
                             progress: a
                         });
