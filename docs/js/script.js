@@ -622,9 +622,6 @@
                         return e.fileStorage.download({
                             url: o,
                             urlLocal: n.file.urlLocal.replace(/bId/, t),
-                            before: function(e) {
-                                e.overrideMimeType("text/xml; charset=utf-8");
-                            },
                             progress: a
                         });
                     },

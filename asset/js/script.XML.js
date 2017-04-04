@@ -26,10 +26,10 @@ this.download=function(progressCallback){
       return app.fileStorage.download({
         url: url,
         urlLocal: configuration.file.urlLocal.replace(/bId/,bId),
-        before:function(xhr){
-          // xhr.setRequestHeader("Access-Control-Allow-Origin", "*");
-          xhr.overrideMimeType('text/xml; charset=utf-8');
-        },
+        // before:function(xhr){
+        //   // xhr.setRequestHeader("Access-Control-Allow-Origin", "*");
+        //   // xhr.overrideMimeType('text/xml; charset=utf-8');
+        // },
         progress: progressCallback
       });
     },
