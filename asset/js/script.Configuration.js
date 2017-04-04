@@ -16,6 +16,7 @@ file: {
     'https://drive.google.com/uc?export=download&id=gId',
     'http://api.laisiangtho.com/bible/bId.xml',
     'https://storage.googleapis.com/api.laisiangtho.com/bible/bId.xml',
+    'https://raw.githubusercontent.com/laisiangtho/core/master/dev/bible/bId.xml',
     'bible/bId.xml'
   ]
 },

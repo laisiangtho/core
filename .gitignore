@@ -54,7 +54,6 @@ output
 dev/lib/*.js
 dev/js/*.js
 dev/css/*.css
-dev/bible/*
 dev/font/*
 !dev/font/*.json
 asset/*/*[0-9].*
