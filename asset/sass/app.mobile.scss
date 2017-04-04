@@ -1,0 +1,77 @@
+@import 'Config';
+@import "app.mobile.Header";
+@import "app.mobile.Nav";
+@import "app.mobile.Main";
+// @import "app.mobile.Footer";
+html{
+  &.landscape {}
+  &.portrait {}
+  body{
+    header{ }
+    nav{ }
+    main{ }
+    footer{ }
+  }
+}
+ul{
+  // NOTE: hO Toggle
+  &.hO{
+    top:54px;
+    // border-radius:3px; box-shadow:inset 0 0px 1px 1px darken($ColorDim,35%); background-color:lighten($ColorDim,10%);
+    // width:180px;
+    width: 220px;
+    &:before{
+      // border-bottom-color:darken($ColorDim,25%);
+      border-width:8px;
+      // right:27px;
+      top:-16px;
+    }
+    &:after{
+      // border-bottom-color:lighten($ColorDim,10%);
+      border-width:8px;
+      // right:27px;
+      top:-14px;
+    }
+    >li{
+      // width:180px;
+      &::-webkit-scrollbar {
+        width:0px;
+      }
+      &:empty{
+        display:none;
+      }
+    }
+  }
+  // NOTE: hW Toggle
+  &.hW{}
+}
+/*
+list-*
+roll-*
+main-*
+verso-*
+link-*
+Nav.bible, Link.bible, List.bible,  Main.bible
+*/
+ol{
+  li {
+    list-style: none;
+  }
+  // NOTE: List-lookup
+  @import "app.mobile.List.lookup";
+  // NOTE: list-bookmark
+  @import "app.mobile.List.bookmark";
+  // NOTE: list-parallel
+  @import "app.mobile.List.parallel";
+  // NOTE: list-chapter
+  @import "app.mobile.List.chapter";
+  
+  // NOTE: main-bible
+  @import "app.mobile.Main.bible";
+  // NOTE: main-book
+  @import "app.mobile.Main.book";
+  // NOTE: main-parallel (reader, lookup)
+  @import "app.mobile.Main.parallel";
+  // NOTE: main-nomatch (reader, lookup) no match
+  @import "app.mobile.Main.nomatch";
+}

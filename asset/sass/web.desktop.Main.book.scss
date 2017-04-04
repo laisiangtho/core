@@ -1,0 +1,113 @@
+&.main-book{
+  display: table; width: 98%; //padding: 1%;
+  >li{
+    // NOTE: Testment each
+    display: table-cell; width: 50%;
+    text-align: center;
+    h2{
+      // NOTE: Testment name
+      display: inline-block; padding: 2% 7%;
+      // background-color: lighten(#ECECEC,6%); box-shadow: 2px 1px 2px 1px darken($BackgroundColor,10%); border-radius: 50px 5px 50px 5px; overflow: hidden;
+      font-size: 100%;color: #666;text-shadow:0px 4px 7px #666;
+    }
+    &:last-child{
+      h2{
+        // border-radius:  5px 50px 5px 50px; box-shadow: -2px 1px 2px 1px darken($BackgroundColor,10%);
+      }
+    }
+    &.active{
+      h2{}
+    }
+    >ol{
+      // NOTE: Section
+      >li{
+        // NOTE: Section each
+        margin:3% 2%; overflow: hidden;box-shadow: 0px 0px 1px 1px darken($BackgroundColor,10%); border-radius: 2px;
+        h3{
+          // NOTE: Section name
+          padding:7px 2%; font-size: 90%; color: #ccc; text-shadow: 1px 1px 1px #fff; background-color: lighten(#ECECEC,5%);
+        }
+        &.active{
+          h3{}
+        }
+        >ol{
+          // NOTE: Book
+          border-top: 1px solid lighten(#ECECEC,1%);
+          >li{
+            // NOTE: Book each
+            border-bottom: 1px solid lighten(#ECECEC,1%);
+            >p{
+              display: table; width:98%;padding:7px 1%; font-size: 90%; vertical-align: middle;line-height: 20px;
+              a, span{
+                display: table-cell; padding: 4px 2px;
+              }
+              a{
+                // Book link
+                color: #474747; text-align: left; max-width: 90px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+                &[data-title]{
+                  &:before{
+                    display: inline-block; content: attr(data-title); min-width: 25px; color: #ccc;font-size: 80%;text-align: center;
+                  }
+                }
+                &:hover {
+                  color: lighten($ColorBlue,20%);
+                }
+              }
+              span{
+                position: relative; width: 40px; min-width: 40px; box-shadow:inset 0px 0px 1px 1px darken($BackgroundColor,20%); border-radius:2px; font-size: 90%; 
+                color: #666; //text-shadow:0px 1px 1px #000;
+                cursor: default;
+                &.active{
+                  box-shadow:inset 0px -1px 1px 1px darken($BackgroundColor,20%);
+                  &:before, &:after{
+                      position:absolute;display:block;width:0px;height:0px;content: "";vertical-align:middle;border:solid transparent;
+                  }
+                  &:before{
+                      border-top-color:#ccc;border-width:5px;bottom:-10px; right:17px;
+                  }
+                  &:after{
+                      border-top-color:#fff;border-width:5px;bottom:-7px; right:17px;
+                  }
+                }
+              }
+            }
+            &.active{
+              >p{
+                a{
+                  color: lighten($ColorBlue,20%);
+                }
+              }
+            }
+            &:last-child{
+              border-bottom: 0;
+            }
+            >ol{
+              // NOTE: Chapter
+              position: relative; display: block; padding: 12px 1px;  border-top: 1px solid darken(#ECECEC,3%); background-color: lighten(#ECECEC,2%);
+              >li{
+                // NOTE: Chapter each
+                display: inline-block; margin: 4px; min-width: 50px;font-size: 90%;
+                border: 1px solid #fff;
+                >a{
+                  display: block; padding:5px 3px; color: #5A5354; background-color: lighten(#ECECEC,3%);
+                  box-shadow:inset 0px 0px 1px 1px darken(#fff,20%); border-radius: 2px;
+                  &:after{
+                    content: attr(data-title);
+                    vertical-align: super;
+                    font-size: 80%;color:#ccc;
+                  }
+                }
+                &.active{
+                  // background-color: #c4c2c2; box-shadow: inset 0 1px 1px 0 #999699;
+                  a{
+                    color: #E80D11; background-color: #fff;
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,24 @@
+{
+  "manifest_version": 2,
+  "name": "Lai Siangtho API",
+  "description": "access",
+  "version": "1.0",
+  "options_ui": {
+    "page": "options.html",
+    "chrome_style": true,
+    "open_in_tab": true
+  },
+  "browser_action": {
+    "default_icon": "img/icon.png",
+    "default_popup": "popup.html"
+  },
+  "permissions": [
+    "unlimitedStorage"
+  ],
+  "offline_enabled": true,
+  "content_security_policy": "script-src 'self' 'unsafe-eval'; object-src 'self'",
+  "background": {
+    "scripts": ["background.js"],
+    "persistent": false
+  }
+}

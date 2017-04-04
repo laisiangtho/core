@@ -1,0 +1,34 @@
+@import 'Config';
+/* Portrait */
+@media screen and (orientation:portrait) {
+   /* Portrait styles here */
+   body{
+     header{
+       border-top: 20px solid transparent;
+      //  border-top: 20px solid $BackgroundColorBar;
+     }
+     nav{
+       top: 20px;
+       dl{
+         dt{
+          //  height: 70px;
+         }
+       }
+     }
+     main{
+       top: 70px;
+     }
+   }
+}
+/* Landscape */
+// @media screen and (orientation:landscape) {}
+// html{
+//   &.landscape {}
+//   &.portrait {}
+//   body{
+//     header{ }
+//     nav{ }
+//     main{ }
+//     footer{ }
+//   }
+// }

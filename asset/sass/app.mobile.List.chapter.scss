@@ -1,0 +1,33 @@
+&.list-chapter{
+  // NOTE: Chapter
+  display: block;
+  // margin: 2px auto;
+  text-align: center;
+  white-space: pre-wrap;
+  >li{
+    // NOTE: Chapter each
+    display: inline-block;
+    padding: 2px;
+    >a{
+      display:block;
+      padding:5px 0; width:50px;
+      color: #5A5354; 
+      background-color: lighten(#ECECEC,4%);
+      border-radius:2px;
+      font-size: 100%;
+      &:after{
+        content: attr(data-title);
+        vertical-align: super;
+        font-size: 80%;color:#ccc;
+      }
+    }
+    &.active{
+      // background-color: #c4c2c2; box-shadow: inset 0 1px 1px 0 #999699;
+      a{
+        color: #E80D11; 
+        // background-color: #fff;
+        background-color: lighten(#ECECEC,0%);
+      }
+    }
+  }
+}

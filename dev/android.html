@@ -1,38 +1,49 @@
 <!doctype html>
 <html>
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, user-scalable=no">
-<title>Scriptive</title>
-<link rel="api" href="http://api.laisiangtho.com/"/>
-<link rel="icon" href="img/icon.png" type="image/png"/>
-<!-- <link rel="stylesheet" href="css/style.splash.css"> -->
-<link rel="stylesheet" href="font/laisiangtho.css">
-<link rel="stylesheet" href="css/style.css">
-<!-- <script src="lib/jquery.min.js"></script> -->
-<!-- <script src="lib/jquery.ui.min.js"></script> -->
-<!-- <script src="lib/jquery.ui.touch-punch.min.js"></script> -->
-<!--<script src="lib/jquery.mobile.custom.min.js"></script>-->
-<!-- <script src="lib/localforage.min.js"></script> -->
-<!--<script src="cordova.js"></script>-->
-<script src="lib/scriptive.min.js"></script>
-<script src="js/script.js"></script>
-<script>
-</script>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, user-scalable=no">
+  <title>Lai Siangtho</title>
+  <link rel="api" href="http://api.example.com/"/>
+  <link rel="icon" href="img/icon.png" type="image/png"/>
+  <!-- <link rel="stylesheet" href="css/style.splash.css"> -->
+  <!-- <link rel="stylesheet" href="font/scriptive.css"> -->
+  <link rel="stylesheet" href="css/style.css">
+  <!-- <script src="lib/jquery.min.js"></script> -->
+  <!-- <script src="lib/jquery.ui.min.js"></script> -->
+  <!-- <script src="lib/jquery.ui.touch-punch.min.js"></script> -->
+  <!-- <script src="lib/jquery.mobile.custom.min.js"></script> -->
+  <!-- <script src="lib/localforage.min.js"></script> -->
+  <script src="lib/scriptive.min.js"></script>
+  <script src="js/script.js"></script>
+  <script>
+    app.document({
+      config:{
+        Device:'android',Platform:'app',Screen:'mobile',
+      },
+      ready:function(){
+        this.config.msg.info = document.querySelector("li#msg");
+      }
+    });
+  </script>
 </head>
 <body id="l189">
+  <div id="screen">
     <div>
-    	<div>
-            <h1>Scriptive</h1>
-        </div>
-        <div>
-            <p>July 23, 2015  8:20</p>
-        </div>
-        <div>
-            <ol>
-                <li id="msg">Wait</li>
-            </ol>
-        </div>
+      <h1 title="1.0.0">Scriptive</h1>
     </div>
+    <div>
+      <p>November 11, 2016</p>
+    </div>
+    <div>
+      <ol>
+        <li id="msg" title="...">a moment please!</li>
+      </ol>
+    </div>
+  </div>
+  <script>
+    var __cordovaRunningOnBrowser__ = false;
+  </script>
+  <!-- <script src="cordova.js"></script> -->
 </body>
 </html>

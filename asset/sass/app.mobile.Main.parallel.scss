@@ -1,0 +1,151 @@
+&.parallel {
+  display: table; width: 100%;font-size: 100%;
+  // NOTE: Bible
+  >li {
+    // NOTE: Bible each
+    display: table-cell;
+    // border: 1px solid #ECECEC;
+    // &:last-child{
+    //   >ol{
+    //     border-right:0;
+    //   }
+    // }
+    >ol{
+      // NOTE: Book
+      // border-right: 1px solid #ECECEC;
+      >li{
+        // NOTE: Book each
+        // padding: 2%;
+        // padding:1%;
+        margin:7px 1%;
+        // box-shadow: 0 0 1px 1px rgba(200,200,200,1.00);
+        // border:1px dotted #ccc;
+        
+        h2{
+          // NOTE: Book name
+          font-size: 120%;
+          line-height: 30px;
+          font-weight: normal;
+          padding:7px 1%;
+          // display: inline-block;
+          // border-bottom:1px solid #ECECEC;
+          // color: #ECECEC;
+          text-shadow: 0px 1px 1px #666;
+          text-align: center;
+        }
+        >ol{
+          // border-top:1px solid #ECECEC;
+          // NOTE: Chapter
+          padding:10px 2%;
+          // margin-bottom: 1%;
+          >li{
+            // NOTE: Chapter each
+            // margin: 1%;
+            // border-top:1px solid #ECECEC;
+            h3{
+              // NOTE: Chapter name
+              font-size: 100%;
+              line-height: 20px;
+              // border:1px dotted #ccc;
+              // display: inline-block;
+              // font-size: 80%;
+              padding:10px 7px;
+              // min-width: 20px;
+              height: 20px;
+              text-align: center;
+              font-weight: normal;
+              // box-shadow: 0 0 1px 1px rgba(200,200,200,1.00);
+              // font-size: 100%;
+              text-shadow: 1px 1px 2px #fff;
+              // color: #9D9D9D;
+              // border-top:1px solid #ECECEC;
+              // box-shadow: 0 1px 1px 0px rgba(200,200,200,1.00);
+              // background-color: #ECECEC;
+              color: darken($ColorDim,20%);
+              /*
+              background-color: lighten($ColorDim,20%);
+              border-top:1px solid $ColorDim;
+              background-color: $ColorDim;
+              border-radius: 2px;
+              position: relative;
+              
+              &:before, &:after {
+                position: absolute; display: block; pointer-events: none; content: "";width: 0; height: 0; vertical-align: middle; border: solid transparent;
+              }
+              &:before {
+                border-top-color:$ColorNone; border-width: 5px; left: 11px; bottom: -10px;
+              }
+              &:after {
+                border-top-color:$ColorDim; border-width: 5px; left: 11px; bottom: -9px;
+              }
+              */
+            }
+            >ol{
+              // NOTE: Verse
+              // border-left:1px dotted #ccc;
+              padding:2px 0px;
+              >li{
+                // NOTE: Verse each
+                font-size:104%;line-height:23px;
+                position: relative;
+                &.title{
+                  // NOTE: Title
+                  h4{
+                    margin:1%;
+                    color: #9D9D9D;
+                    text-align: center;
+                  }
+                }
+                &.ref{
+                  // NOTE: Reference
+                }
+                &[data-title]{
+                  padding:4px 0px 4px 30px;
+                  &:before{
+                    position: absolute;
+                    content: attr(data-title);
+                    display: block; 
+                    // margin-right: 5px;
+                    font-size: 90%;
+                    padding: 0px;
+                    left: -5px;
+                    text-align: center;
+                    // background-color: #ccc;
+                    // border-left:1px dotted #ccc;
+                    // font-weight: bold;
+                    min-width: 35px;
+                  }
+                  b{
+                    color:red; font-weight: normal;
+                  }
+                  &.active{
+                    color:$ColorRed; 
+                    &:before{
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+    
+    // one
+    &:first-child:nth-last-child(1){
+      // max-width: 800px;
+    }
+    // if more than one
+    &:nth-last-child(n+2){
+      // display: table-cell;
+    }
+    // two
+    &:first-child:nth-last-child(2), &:first-child:nth-last-child(2) ~ li {
+      // width: 50%;
+    }
+    // three
+    &:first-child:nth-last-child(3), &:first-child:nth-last-child(3) ~ li {
+      // width: 33%;
+    }
+  }
+}

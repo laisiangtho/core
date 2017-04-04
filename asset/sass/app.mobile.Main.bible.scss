@@ -1,0 +1,91 @@
+&.main-bible{
+  // Bible
+  display: table; width: 98%; margin: 1%;vertical-align: middle;
+  >li{
+    // Bible each
+    // display: inline-table;
+    display: block;
+    padding: 1% 1px;
+    // margin: 1%;
+    // width: 10%;
+    border-bottom: 1px dotted #ccc;
+    p{
+      display: table;
+      width: 100%;
+      font-size: 104%;
+      // height: 30px;
+      // box-shadow: 0 0 0 0 darken($BackgroundColor,15%);
+      white-space: nowrap;
+      * {
+        display: table-cell; vertical-align: middle; padding: 6px;
+      }
+      span{
+        // width: 50px;
+        // max-width: 50px;
+        // padding: 0;
+        text-align: center;
+        font-size: 120%;
+        &:first-child {
+          width: 30px;
+          // box-shadow: 1px 0 1px 0px darken($BackgroundColor,15%);
+          // border-radius: 1px;
+          // box-shadow: 1px 0 1px 0px darken($BackgroundColor,15%);
+          // border-right: 1px solid #ccc;
+          &:before{
+            color: lighten($ColorNone,1%);
+          }
+          &:hover {
+            &:before {
+              // color: darken($ColorDim,25%);
+            }
+          }
+          &.offline{
+            &:before{
+              color: darken($ColorDim,35%);
+            }
+          }
+          &.animate-spin{
+            &:before{
+              color: $ColorRed;
+            }
+          }
+        }
+        &:last-child {
+          width:40px;
+          // font-size: 130%;
+          &:before {
+            font-size: 120%; color: lighten($ColorNone,10%);
+          }
+          &:hover {
+            &:before {
+              color: red;
+            }
+          }
+        }
+      }
+      a{
+        // padding-left: 5px;
+        // line-height: 20px;
+        // max-width: 500px;
+        // width:auto;
+        max-width: 50px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        color: $ColorBlue;
+        &:hover {
+          color: lighten($ColorBlue,20%);
+        }
+      }
+    }
+    &.active {
+      p {
+        a {
+          color: lighten($ColorBlue,20%);
+        }
+      }
+    }
+    &:last-child{
+      border-bottom: 0;
+    }
+  }
+}

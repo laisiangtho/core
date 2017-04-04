@@ -1,26 +1,27 @@
 {
-  "common": {
+  "app": {
     "name": "laisiangtho",
     "version":"1.0.0",
     "build": "1.0.0",
+    "description":"the Holy Bible in languages!",
+    "developer":"Khen Solomon Lethil",
     "library": {
       "jquery.min.js":"http://code.jquery.com/jquery-3.1.1.min.js",
       "jquery.ui.min.js":"http://code.jquery.com/ui/1.12.0/jquery-ui.min.js",
       "jquery.ui.touch-punch.min.js": "https://raw.githubusercontent.com/furf/jquery-ui-touch-punch/master/jquery.ui.touch-punch.min.js",
       "localforage.min.js":"https://mozilla.github.io/localForage/localforage.min.js",
+      "filestorage.min.js":"https://raw.githubusercontent.com/scriptive/fileStorage/master/dist/filestorage.min.js",
+      "sortable.min.js":"https://raw.githubusercontent.com/RubaXa/Sortable/master/Sortable.min.js",
+      "slip.min.js":"https://raw.githubusercontent.com/pornel/slip/master/slip.js",
       "google-analytics-bundle.js":"https://raw.githubusercontent.com/GoogleChrome/chrome-platform-analytics/master/google-analytics-bundle.js"
     },
     "dist": {
       "file": {
-        "fontmya": {
+        "font": {
           "(.*)": true
         },
-        "laisiangtho": {
-          "([A-Z])": false
-        },
         "lang": {
-          "^[a-z]{2}.json$": true,
-          "norwegian": "sure"
+          "bible.json": true
         }
       }
     }
@@ -49,6 +50,51 @@
     "electron": {
       "dev": {},
       "dist": {}
+    }
+  },
+  "gulp":{
+    "sass":{
+      "debugInfo": true,
+      "lineNumbers": false,
+      "errLogToConsole": true,
+      "outputStyle": "compressed"
+    },
+    "js":{
+      "output":{
+        "beautify": true, 
+        "comments":"license"
+      },
+      "compress":true,
+      "preserveComments":"license"
+    },
+    "custom":{
+      "fileStorage": {
+        "source":"../scriptive.filestorage/asset/filestorage/fileStorage.js",
+        "target":["dev/lib","api/extension/js"],
+        "pipe":{
+          "gulp-include":{},
+          "gulp-uglify":{
+            "mangle":false,
+            "output":{
+              "beautify": false, 
+              "comments":"license"
+            },
+            "compress":true,
+            "preserveComments":"license"
+          },
+          "gulp-concat":"filestorage.min.js"
+        },
+        "watch":"../scriptive.filestorage/asset/filestorage/*.js"
+      },
+      "extensionSASS": {
+        "source":"asset/extensionSASS/*([^A-Z0-9-]).scss",
+        "target":"api/extension/css",
+        "pipe":{
+          "gulp-sass":{
+            "style": "compressed"
+          }
+        }
+      }
     }
   }
 }

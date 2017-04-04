@@ -1,0 +1,19 @@
+&.main-nomatch{
+  display: table; width: 94%; height: 100%; padding: 3%; 
+  color: $ColorNone;
+  li{
+    display: table-cell;text-align: center;
+    vertical-align: middle; 
+    h1{
+      font-size:calc(120% + 4vw);text-shadow: 1px 1px 1px #666;
+      padding-bottom: 5%;
+      span{
+        color: $ColorRed;
+      }
+    }
+    p{
+      font-size:90%;text-shadow: 0px 1px 1px #fff;
+    }
+    
+  }
+}

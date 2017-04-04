@@ -1,0 +1,376 @@
+::-webkit-scrollbar {
+  width: 10px; }
+
+::-webkit-scrollbar-thumb {
+  background-color: #bdbdbd;
+  border-top-left-radius: 10px;
+  border-top-right-radius: 10px;
+  border-bottom-right-radius: 10px;
+  border-bottom-left-radius: 10px; }
+
+::-webkit-scrollbar-thumb:window-inactive {
+  background-color: #bdbdbd; }
+
+* {
+  padding: 0;
+  margin: 0; }
+
+body {
+  position: fixed;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background-color: #fdfdfd; }
+
+body > div {
+  display: table;
+  width: 100%;
+  height: 100%;
+  padding: 0;
+  border-spacing: 7px 1px; }
+
+nav, main, footer {
+  display: table-cell;
+  overflow: hidden;
+  padding: 1px;
+  vertical-align: middle; }
+
+nav {
+  width: 60px; }
+  nav > ul > li {
+    list-style: none;
+    text-align: center; }
+    nav > ul > li ol li {
+      display: inline-block;
+      clear: both;
+      background-color: #666;
+      color: #fff;
+      border-radius: 3px;
+      padding: 5px 10px;
+      margin: 3px 7px;
+      -webkit-user-select: none;
+      position: relative; }
+      nav > ul > li ol li[data-title]:before {
+        position: absolute;
+        top: -10px;
+        right: 0;
+        content: attr(data-title);
+        line-height: 14px;
+        font-size: 12px;
+        margin-right: 2px;
+        border-radius: 12px;
+        padding: 1px 5px;
+        background-color: red; }
+
+main {
+  width: 50%;
+  max-width: 400px; }
+  main > div {
+    width: 94%;
+    height: 100%;
+    padding: 2px 3%;
+    overflow: auto;
+    box-shadow: 0px 0px 1px 1px #babbbc inset;
+    background-color: #fbfbfb;
+    border-radius: 3px; }
+    main > div > ol {
+      padding: 3px;
+      margin: 5px;
+      color: #666; }
+      main > div > ol > li {
+        margin: 7px 15px; }
+        main > div > ol > li h3 {
+          margin: 0; }
+          main > div > ol > li h3:after {
+            display: inline-block;
+            content: attr(data-title);
+            margin-left: 5px;
+            color: #ccc; }
+        main > div > ol > li ol {
+          padding: 3px;
+          margin: 3px 7px; }
+          main > div > ol > li ol li:before {
+            content: attr(id);
+            display: inline-block;
+            width: 30px;
+            text-align: center;
+            text-shadow: 1px 1px 1px #666;
+            color: #fff;
+            background-color: #666;
+            border-radius: 3px;
+            margin: 0 3px; }
+          main > div > ol > li ol li p {
+            display: inline-block;
+            cursor: pointer; }
+            main > div > ol > li ol li p:before {
+              content: attr(data-title);
+              display: inline-block;
+              color: #ccc;
+              margin: 0 3px; }
+          main > div > ol > li ol li.active {
+            color: green; }
+            main > div > ol > li ol li.active p {
+              text-decoration: line-through; }
+          main > div > ol > li ol li.seed {
+            color: red; }
+          main > div > ol > li ol li.booklist:before {
+            background-color: green; }
+          main > div > ol > li ol li.booklist-incomplete:before {
+            background-color: red; }
+
+footer {
+  width: auto;
+  text-align: center; }
+  footer > ul {
+    width: 100%; }
+    footer > ul > li h1, footer > ul > li h2 {
+      margin: 7px auto;
+      line-height: 19px; }
+    footer > ul > li h2 {
+      color: #ccc; }
+      footer > ul > li h2[title]:before {
+        content: attr(title);
+        display: inline-block;
+        margin-right: 4px;
+        padding: 1px 3px;
+        background-color: #ccc;
+        border-radius: 3px;
+        color: #fff; }
+    footer > ul > li p {
+      display: inline-block;
+      clear: both;
+      background-color: #666;
+      color: #fff;
+      text-shadow: 1px 1px 1px #666;
+      border-radius: 4px;
+      padding: 3px 10px;
+      margin: 3px;
+      -webkit-user-select: none; }
+      footer > ul > li p:hover {
+        background-color: #545454; }
+    footer > ul > li div {
+      display: -webkit-flex;
+      display: -ms-flexbox;
+      display: flex;
+      -webkit-justify-content: center;
+      -ms-flex-pack: center;
+      justify-content: center;
+      -webkit-align-items: center;
+      -ms-flex-align: center;
+      align-items: center;
+      min-height: 70px;
+      padding: 2%;
+      margin: 3% auto;
+      border: 1px dotted #ccc;
+      text-align: center;
+      font-size: 16px;
+      text-shadow: 1px 1px 1px #ccc; }
+      footer > ul > li div.scanning {
+        text-shadow: 1px 1px 1px #666; }
+        footer > ul > li div.scanning:after {
+          color: red; }
+    footer > ul > li.active p.delete, footer > ul > li.active p.stop {
+      background-color: red; }
+      footer > ul > li.active p.delete:hover, footer > ul > li.active p.stop:hover {
+        background-color: #ff3333; }
+    footer > ul > li.active p.bible, footer > ul > li.active p.book {
+      background-color: #b3b3b3;
+      color: #ccc; }
+    footer > ul > li.unusable p.download, footer > ul > li.unusable p.delete, footer > ul > li.unusable p.stop {
+      background-color: #b3b3b3;
+      color: #ccc; }
+    footer > ul > li > ul > li {
+      display: inline-block;
+      min-width: 60px;
+      position: relative;
+      margin: 4px 0; }
+      footer > ul > li > ul > li p {
+        background-color: #b3b3b3;
+        color: #ccc;
+        border-radius: 16px;
+        margin: 0;
+        min-width: 20px;
+        font-size: 13px;
+        line-height: 12px; }
+        footer > ul > li > ul > li p:first-child {
+          color: #fff;
+          z-index: 3;
+          position: absolute;
+          left: 0px;
+          padding: 7px 4px; }
+        footer > ul > li > ul > li p:last-child {
+          z-index: 2;
+          padding: 5px 1px; }
+          footer > ul > li > ul > li p:last-child:hover {
+            background-color: red; }
+      footer > ul > li > ul > li.missing p {
+        background-color: #e6e6e6;
+        color: #fff;
+        text-shadow: 0px 1px 1px #666; }
+        footer > ul > li > ul > li.missing p:hover {
+          background-color: #e6e6e6;
+          color: #fff; }
+  footer > dl > dt {
+    background-color: red;
+    height: 300px;
+    vertical-align: middle;
+    text-align: center; }
+  footer > dl > dd {
+    height: 70%;
+    background-color: blue; }
+
+/*
+nav,main,footer{
+  position: fixed; top:0; bottom:0;overflow: hidden;
+}
+nav,footer{
+  display: -webkit-flex;
+  display: -ms-flexbox;
+  display: flex;
+  // width: 100%; height: 100%;
+  
+
+  -webkit-justify-content: center;
+  -ms-flex-pack: center;
+  justify-content: center;
+
+  -webkit-align-items: center;
+  -ms-flex-align: center;
+  align-items: center;
+  >ul{
+    // display: table; width: 100%; height: 100%;
+    >li{
+      // display:table-cell;
+      vertical-align: middle;
+      text-align: center;
+      overflow: auto; -webkit-overflow-scrolling: touch;
+      >p{
+        @include user-select();
+      }
+    }
+  }
+}
+nav{
+  left:0; width: 8vw;
+  >ul{
+    >li{
+      ol{
+        li{
+          display: inline-block; clear: both;
+          background-color: #666;
+          color: #fff;
+          border-radius: 3px;
+          padding: 5px 10px;
+          margin: 3px 7px;
+          @include user-select();
+        }
+      }
+    }
+  }
+}
+main{
+  left:9vw; width: 40%; max-width: 40vw;
+  margin:5px 0vw 5px 1vw;
+  padding: 5px;
+  // top: 5px; bottom: 5px; 
+  overflow: auto; -webkit-overflow-scrolling: touch;
+  @include box-shadow(0px, 0px, 1px, 1px, #babbbc);
+  background-color: lighten($BackgroundColor,1%);
+  border-radius: 3px;
+  // @include box-shadow(0px, 0px, 1px, 1px, #babbbc);
+
+}
+footer{
+  width:46vw; right: 0;
+  // vertical-align: middle;
+  margin:5px 0;
+  >ul{
+    width: 100%;
+    >li{
+      h1{
+        margin: 10px auto;
+      }
+      p{
+        display: inline-block; clear: both;
+        background-color: #666;
+        color: #fff;
+        border-radius: 3px;
+        padding: 3px 10px;
+        margin: 3px;
+        &:hover{
+          background-color: darken(#666,7%);
+        }
+      }
+      div{
+        display: -webkit-flex;
+        display: -ms-flexbox;
+        display: flex;
+
+        -webkit-justify-content: center;
+        -ms-flex-pack: center;
+        justify-content: center;
+      
+        -webkit-align-items: center;
+        -ms-flex-align: center;
+        align-items: center;
+        
+        min-height: 70px;
+        padding: 2%; margin: 3% auto;
+        border: 1px dotted #ccc;
+        text-align: center;
+        font-size: 14px;
+      }
+      &.active{
+        p.delete{
+          background-color: red;
+        }
+      }
+      &.unusable{
+        p{
+          &.download,&.delete{
+            background-color: lighten(#666,30%);
+            color: #ccc;
+          }
+        }
+      }
+    }
+    &.optionIndividual{
+      >li{
+        h1{
+        }
+        p{
+          &:hover{
+          }
+          &.unusable{
+          }
+        }
+        div{
+        }
+      }
+    }
+  }
+  // vertical-align: middle;
+  // text-align: center;
+  div{
+    // vertical-align: middle; text-align: center;
+  }
+  >dl{
+    // display: table; width: 100%; height: 100%;
+    
+
+    // width: 100%; 
+    >dt{
+      // display: table-row;
+      background-color: red;
+      height: 300px;
+      vertical-align: middle; text-align: center;
+    }
+    >dd{
+      // display: table-row;
+      height: 70%;
+      background-color: blue;
+    }
+  }
+}
+*/

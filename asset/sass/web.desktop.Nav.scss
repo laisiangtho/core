@@ -1,0 +1,59 @@
+@import 'Config';
+nav{
+  dl{
+    dt{
+      p{
+        // color:#666; font-size: 115%; text-transform: uppercase;
+        margin-left:7px;
+        &:before{
+          // color: red;
+          font-size: 120%;
+        }
+        span{
+          display: none;
+        }
+      }
+    }
+    dd{
+      ul{
+        padding: 5%; 
+        li{
+          padding:5% 5%; margin:5% 1%; font-size: 105%;
+          p{
+            a{
+              display:inline-block;
+              text-transform: capitalize;
+              padding: 2px;
+              margin-left: 2px;
+              // color: #666;
+              // @include box-shadow(0px, 0px, 1px, 1px, #d9dbdd,inset);
+              // @include box-shadow(1px, 0px, 1px, 0px, darken($BackgroundColor,10%));
+              border-radius: 2px;
+              &:before{
+                font-size: 90%; color: #8f9193;
+                // text-shadow: 1px 1px 1px #ccc;
+              }
+              &:hover{
+                background-color: $BackgroundColorHighlight;
+              }
+            }
+          }
+          &:last-child{
+            border-bottom: 0;
+          }
+          &.active{
+            p{
+              a{
+                background-color: $BackgroundColorHighlight;
+                &:before{
+                  color: #fff; text-shadow: 1px 1px 1px #666;
+                  // color: #8f9193;
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

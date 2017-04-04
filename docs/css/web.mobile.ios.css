@@ -1,0 +1,1 @@
+@font-face{font-family:"Masterpiece Uni Sans";src:url("../fonts/MasterpieceUniSans-iOS.ttf") format("truetype");font-weight:normal;font-style:normal}body.nav nav{width:40px}body.nav footer,body.nav header,body.nav main{left:40px;width:-webkit-calc(100% - 40px);width:-moz-calc(100% - 40px);width:calc(100% - 40px)}

@@ -8,6 +8,12 @@
   "copyright": "laisiangtho",
   "glyphs": [
     {
+      "uid": "2cfb3f2b46b34a1790aec0aa846297b6",
+      "css": "menu",
+      "code": 59400,
+      "src": "entypo"
+    },
+    {
       "uid": "861ab06e455e2de3232ebef67d60d708",
       "css": "minus",
       "code": 59440,
@@ -51,13 +57,13 @@
     },
     {
       "uid": "ccddff8e8670dcd130e3cb55fdfc2fd0",
-      "css": "down-open",
+      "css": "strong-down",
       "code": 59422,
       "src": "fontawesome"
     },
     {
       "uid": "fe6697b391355dec12f3d86d6d490397",
-      "css": "up-open",
+      "css": "strong-up",
       "code": 59423,
       "src": "fontawesome"
     },
@@ -74,15 +80,15 @@
       "src": "fontawesome"
     },
     {
-      "uid": "555ef8c86832e686fef85f7af2eb7cde",
-      "css": "previous",
-      "code": 59395,
+      "uid": "ad6b3fbb5324abe71a9c0b6609cbb9f1",
+      "css": "arrow-right",
+      "code": 59394,
       "src": "fontawesome"
     },
     {
-      "uid": "ad6b3fbb5324abe71a9c0b6609cbb9f1",
-      "css": "next",
-      "code": 59394,
+      "uid": "555ef8c86832e686fef85f7af2eb7cde",
+      "css": "arrow-left",
+      "code": 59395,
       "src": "fontawesome"
     },
     {
@@ -104,14 +110,8 @@
       "src": "fontawesome"
     },
     {
-      "uid": "2cfb3f2b46b34a1790aec0aa846297b6",
-      "css": "menu",
-      "code": 59400,
-      "src": "entypo"
-    },
-    {
       "uid": "14017aae737730faeda4a6fd8fb3a5f0",
-      "css": "right",
+      "css": "check-in",
       "code": 59407,
       "src": "entypo"
     },
@@ -189,7 +189,7 @@
     },
     {
       "uid": "465bb89b6f204234e5787c326b4ae54c",
-      "css": "ccw",
+      "css": "refresh",
       "code": 59428,
       "src": "entypo"
     },
@@ -360,6 +360,42 @@
       "css": "close",
       "code": 59443,
       "src": "websymbols"
+    },
+    {
+      "uid": "b714be5a812a474811604f700dfc87ce",
+      "css": "slim-left",
+      "code": 61447,
+      "src": "mfglabs"
+    },
+    {
+      "uid": "37910a1398001a5ccb541cb2a253a2c7",
+      "css": "slim-right",
+      "code": 61446,
+      "src": "mfglabs"
+    },
+    {
+      "uid": "440e148d0e21100118eae7036bcd2067",
+      "css": "slim-up",
+      "code": 61445,
+      "src": "mfglabs"
+    },
+    {
+      "uid": "d9be617b7f2fe7843118ca2d3a1b8cca",
+      "css": "slim-down",
+      "code": 61444,
+      "src": "mfglabs"
+    },
+    {
+      "uid": "9bc2902722abb366a213a052ade360bc",
+      "css": "loading",
+      "code": 59451,
+      "src": "fontelico"
+    },
+    {
+      "uid": "97902f87200ce74d181044df02a0458d",
+      "css": "attention",
+      "code": 59452,
+      "src": "entypo"
     }
   ]
 }

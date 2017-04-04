@@ -1,0 +1,305 @@
+@import 'Config';
+header{
+  background-color: $BackgroundColorHeader;
+  >ul{
+    height: 50px;
+    >li{
+      // position: relative;
+      &:before{
+        // already define 
+        // color: #8f9193;
+      }
+      &:hover{
+        &:before{
+          // already define 
+          // color:$ColorRed;
+        }
+      }
+      &.home{
+        width: 50px; text-transform: uppercase; background-color:lighten(#666,20%); box-shadow:0px 0px 1px 0px #d9dbdd;
+        span{
+          display: block; padding: 1px; font-size: 50%; background-color: #fff;
+          // position: absolute; top:28px;
+          //  color:#fff;
+        }
+        &:before{
+          display: block; width: 100%;font-size: 110%; color:#fff;
+          // position: absolute; top:10px;
+        }
+        &:hover{
+          &:before{
+            // color:lighten(#666,30%);
+          }
+          span{
+            // background-color:lighten(#666,30%);color:#fff;
+          }
+        }
+      }
+      // NOTE: Menu
+      &.men{
+        width: 35px; font-size: 100%;
+        div{
+          // display: block; width: 100%; margin: 0;text-align: center;
+          // background-color: red;
+          padding: 7px;
+          &:before{
+            display: block; width: 100%; margin: 0;text-align: center;
+          }
+          &:hover{
+            &:before{
+              color:$ColorRed;
+            }
+          }
+        }
+        
+      }
+      // NOTE: Lookup
+      &.dig{
+        z-index:3;
+        >ul{
+          >li{
+            line-height: 25px;
+            >div{
+              padding: 2px; font-size: 110%;
+              &:before{
+                color: #8f9193;
+              }
+              &:hover{
+                &:before{
+                  color:$ColorRed;
+                }
+              }
+            }
+            // NOTE: Form
+            &:first-child{
+              &.active{
+                form{
+                  // border: 1px solid blue;
+                  &:before{
+                    // position: absolute; width: 100%; height: 100%;padding:0px;z-index: -1;left:0px;top:0px;border-radius:2px;
+                  }
+                }
+              }
+              form{
+                display:table;width:100%;border-radius:1px;height:17px;line-height:24px;font-size:9pt;
+                vertical-align: inherit;position: relative;
+                // box-shadow:inset 0px 0px 1px 1px darken(#fff,25%);
+                @include box-shadow(0px, 0px, 1px, 1px, darken(#fff,25%), inset);
+                // border: 1px solid lighten($BackgroundColor,1%);
+                // background-color:#fff;
+                label{
+                  display:table-cell; position: relative; vertical-align: inherit;text-align: center;overflow: hidden;
+                  >span{
+                    display:inline-block;vertical-align: inherit;
+                    // background-color: red;
+                    &:before{
+                      text-align: inherit;
+                    }
+                  }
+                  // NOTE: Book
+                  &:nth-child(1){
+                    width:20px;
+                    span{
+                      &:before{
+                        color:$ColorNone;
+                        font-size: 10pt;
+                      }
+                      &:hover{
+                        &:before{
+                          color:$ColorRed;
+                        }
+                      }
+                    }
+                    //if this parent should have hO
+                    ul{
+                      &.hO{
+                        width:290px;left:-37px;
+                        &:before, &:after{
+                          left:44px;
+                        }
+                      }
+                    }
+                  }
+                  // NOTE: input
+                  &:nth-child(2){
+                    width:100%;
+                  }
+                  // NOTE: link and suggestion
+                  &:nth-child(3){
+                    width:100px;
+                    a{
+                      display:inline-block;color:$ColorNone; padding:0px 3px;
+                      &:empty{
+                        display: none;
+                      }
+                      &:hover{
+                        color:$ColorRed;
+                      }
+                    }
+                    span{
+                        width:20px;
+                        &:before{
+                          color:$ColorNone;
+                        }
+                        &:hover{
+                          &:before{
+                            color:$ColorRed;
+                          }
+                        }
+                    }
+                  }
+                  // NOTE:  button
+                  &:nth-child(4){
+                    // width:30px;
+                  }
+                  input{
+                    display:inline-block;border:0;margin:0;padding:0;background-color:transparent;font-size:13px;line-height:23px; z-index: 3;
+                    &[type="search"]{
+                      width:100%;
+                    }
+                    &[type="submit"]{
+                      color:#666;
+                      width:25px;
+                      height:25px;
+                      // max-height: -o-calc(100% - 4px);
+                      // max-height: -moz-calc(100% - 4px);
+                      // max-height: -webkit-calc(100% - 4px);
+                      // margin: 0px 1px 0px 0px; 
+                      margin: 2px; 
+                      font-variant: normal;text-align:center; pointer-events:auto; 
+                      background-color: darken($BackgroundColor,1%);
+                      box-shadow:inset 1px 0px 0px 0px darken(#fff,25%);
+                      &:hover{
+                        color:$ColorRed; background-color: darken($BackgroundColor,3%);
+                      }
+                    }
+                    &:focus{
+                      outline:none;
+                    }
+                  }
+                }
+              }
+            }
+            // NOTE: Setting
+            &:last-child{
+              width: 29px;
+              ul{
+                &.hO{
+                  width:290px;right:-152px;
+                  &:before, &:after{
+                    right:161px;
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+      // NOTE: Control
+      &.ctl{
+        width: 156px;
+        >ul{
+          >li{
+            line-height: 25px;
+            >div{
+              padding: 2px; font-size: 110%;
+              &:before{
+                color: #8f9193;
+              }
+              &:hover{
+                &:before{
+                  color:$ColorRed;
+                }
+              }
+            }
+            // NOTE: Common
+            ul{
+              &.hO{
+                width:290px;right:-25px;
+                &:before, &:after{
+                  right:38px;
+                }
+              }
+            }
+            // if not Chapter current
+            &:not(.link-chapter){
+              width: 29px;
+            }
+            // Lookup filter changed to Bookmark
+            &.link-bookmark{
+              >div{
+                // position: relative;
+                &[data-title]{
+                  &:after{
+                    position: absolute;
+                    top: -4px;
+                    left: 0;
+                    font-size: 55%;
+                    line-height: 15px;
+                    content: attr(data-title);
+                    padding:2px 0;
+                    vertical-align: middle;
+                    width: 100%;
+                    display: block;
+                    // background-color: $ColorRed;
+                    // background-color: #8f9193;
+                    color: #fff;
+                    border-radius: 2px;
+                  }
+                }
+                &:hover{
+                  &:after{
+                    background-color: $ColorRed!important;
+                  }
+                }
+              }
+              ul{
+                &.hO{
+                  right:-123px;
+                  &:before, &:after{
+                    right:131px;
+                  }
+                }
+              }
+            }
+            // Parallel
+            &.link-parallel{
+              // div{
+              //   &.unusable{
+              //     &:before{
+              //       color:$ColorNone;
+              //     }
+              //   }
+              // }
+              ul{
+                &.hO{
+                  right:-94px;
+                  &:before, &:after{
+                    right:103px;
+                  }
+                }
+              }
+            }
+            // Chapter previous
+            &.link-previous{
+            }
+            // Chapter current
+            &.link-chapter{
+              min-width: 40px;
+              @include box-shadow(0px, 1px, 2px, 0px, #d9dbdd,inset);
+              >div{
+                font-size: 90%;
+                &:hover{
+                  color:$ColorRed;
+                }
+              }
+            }
+            // Chapter next
+            &.link-next{
+            }
+          }
+        }
+      }
+    }
+  }
+}

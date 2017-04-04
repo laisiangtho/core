@@ -1,0 +1,27 @@
+// @import 'Config';
+// @import "web.desktop.Header";
+// @import "web.desktop.Nav";
+// @import "web.desktop.Main";
+// @import "web.desktop.Footer";
+body{
+  &.nav {
+    nav {
+      width: 40px;
+    }
+    footer, header, main {
+      left: 40px;
+      width: -webkit-calc(100% - 40px);
+      width: -moz-calc(100% - 40px);
+      width: calc(100% - 40px);
+    }
+    main {
+      // @include box-shadow(1px, 1px, 0px, 0px, #d9dbdd,inset);
+    }
+    // header,main,footer{
+    //   left: 252px;
+    //   width: -webkit-calc(100% - 252px);
+    //   width:    -moz-calc(100% - 252px);
+    //   width:         calc(100% - 252px);
+    // }
+  }
+}

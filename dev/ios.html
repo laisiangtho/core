@@ -1,38 +1,64 @@
 <!doctype html>
 <html>
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, user-scalable=no">
-<title>Scriptive</title>
-<link rel="api" href="http://api.laisiangtho.com/"/>
-<link rel="icon" href="img/icon.png" type="image/png"/>
-<!-- <link rel="stylesheet" href="css/style.splash.css"> -->
-<link rel="stylesheet" href="font/laisiangtho.css">
-<link rel="stylesheet" href="css/style.css">
-<!-- <script src="lib/jquery.min.js"></script> -->
-<!-- <script src="lib/jquery.ui.min.js"></script> -->
-<!-- <script src="lib/jquery.ui.touch-punch.min.js"></script> -->
-<!--<script src="lib/jquery.mobile.custom.min.js"></script>-->
-<!-- <script src="lib/localforage.min.js"></script> -->
-<!--<script src="cordova.js"></script>-->
-<script src="lib/scriptive.min.js"></script>
-<script src="js/script.js"></script>
-<script>
-</script>
+  <meta charset="utf-8">
+  <!-- <meta name="viewport" content="width=device-width, user-scalable=no"> -->
+  <!-- <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" /> -->
+  <!-- <meta id="viewport" name="viewport" content="width=device-width, height=device-height, user-scalable=no, initial-scale=1, minimum-scale=1" /> -->
+  <!-- <meta name="viewport" content="width=device-width, height=device-height, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no"> -->
+  <!-- <meta name="viewport" content="width=device-width, user-scalable=no"> -->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0"> 
+  <meta name="format-detection" content="telephone=no" />
+  <meta name="msapplication-tap-highlight" content="no" />
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <title>Lai Siangtho</title>
+  <link rel="api" href="http://api.laisiangtho.com/"/>
+  <link rel="icon" href="img/icon.png" type="image/png"/>
+  <!-- <link rel="stylesheet" href="css/style.splash.css"> -->
+  <link rel="stylesheet" href="font/laisiangtho.css">
+  <link rel="stylesheet" href="font/animation.css">
+  <link rel="stylesheet" href="css/style.css">
+  
+  <script src="lib/filestorage.min.js"></script>
+  <!-- <script src="lib/hammer.min.js"></script> -->
+  <!-- <script src="lib/sortable.min.js"></script> -->
+  <script src="lib/slip.min.js"></script>
+  <script src="lib/scriptive.min.js"></script>
+  <script src="js/script.js"></script>
+  <script>
+    app.document({
+      config:{
+        Device:'ios',Platform:'app',Screen:'mobile',
+        file:{
+          // NOTE: web
+          urlAPI:['bible/bId.xml']
+          // NOTE: app
+          // urlAPI:['https://laisiangtho.github.io/bible/bId.xml']
+        }
+      },
+      ready:function(){
+        // console.log('ready');
+      }
+    });
+  </script>
 </head>
-<body id="l189">
+<body>
+  <div id="screen">
     <div>
-    	<div>
-            <h1>Scriptive</h1>
-        </div>
-        <div>
-            <p>July 23, 2015  8:20</p>
-        </div>
-        <div>
-            <ol>
-                <li id="msg">Wait</li>
-            </ol>
-        </div>
+      <h1 title="1.0.0">Lai Siangtho</h1>
     </div>
+    <div>
+      <p>November 11, 2016</p>
+    </div>
+    <div>
+      <ol>
+        <li id="msg" title="...">a moment please!</li>
+      </ol>
+    </div>
+  </div>
+  <script>
+    var __cordovaRunningOnBrowser__ = false;
+  </script>
+  <!-- <script src="cordova.js"></script> -->
 </body>
 </html>
