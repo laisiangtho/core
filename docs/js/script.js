@@ -12,7 +12,7 @@
                 template: "z.html",
                 urlLocal: "bible/bId.xml",
                 lang: "lang/bible.json",
-                urlAPI: [ "https://drive.google.com/uc?export=download&id=gId", "http://api.laisiangtho.com/bible/bId.xml", "https://storage.googleapis.com/api.laisiangtho.com/bible/bId.xml", "https://raw.githubusercontent.com/laisiangtho/core/master/dev/bible/bId.xml", "bible/bId.xml" ]
+                urlAPI: [ "http://api.laisiangtho.com/bible/bId.xml", "https://storage.googleapis.com/api.laisiangtho.com/bible/bId.xml", "https://raw.githubusercontent.com/laisiangtho/core/master/dev/bible/bId.xml" ]
             },
             fileStorage: {
                 RequestQuota: 1073741824,
@@ -622,10 +622,15 @@
                         return e.fileStorage.download({
                             url: o,
                             urlLocal: n.file.urlLocal.replace(/bId/, t),
+                            readAs: "blob",
+                            before: function(e) {
+                                e.overrideMimeType("text/xml");
+                            },
                             progress: a
                         });
                     },
                     process: function(e, n) {
+                        console.log(i.dir);
                         var a = i.dir.shift().replace(/bId/, t);
                         return /gId/.test(a) && (a = a.replace(/gId/, o.all[t].id.gId)), i.request(a).then(function(n) {
                             n.xml || (n.xml = new DOMParser().parseFromString(n.data, n.fileType)), o.file[t] = n.xml, 

@@ -18,6 +18,7 @@ new app.xml(bId).download(function(){
   });
 });
 */
+// console.log(configuration.file.urlAPI);
 this.download=function(progressCallback){
   // https://scriptive.github.io/eba/xml/bId.xml
   var xmlRequest={
@@ -26,15 +27,24 @@ this.download=function(progressCallback){
       return app.fileStorage.download({
         url: url,
         urlLocal: configuration.file.urlLocal.replace(/bId/,bId),
-        // before:function(xhr){
-        //   // xhr.setRequestHeader("Access-Control-Allow-Origin", "*");
-        //   // xhr.overrideMimeType('text/xml; charset=utf-8');
-        // },
+        // requestMethod:'POST',
+        readAs: 'blob', 
+        before:function(xhr){
+          // xhr.setRequestHeader("Access-Control-Allow-Origin", "laisiangtho.com");
+          // xhr.setRequestHeader("Access-Control-Allow-Origin", "*");
+          // xhr.setRequestHeader("x-goog-meta-Access-Control-Allow-Origin", "*");
+          xhr.overrideMimeType('text/xml');
+          // xhr.overrideMimeType('application/xml; charset=utf-8');
+          // xhr.overrideMimeType('application/octet-stream');
+          // xhr.withCredentials = true;
+          // xhr.overrideMimeType('text/plain; charset=x-user-defined');
+        },
         progress: progressCallback
       });
     },
     process:function(successCallback,failCallback){
       // var url = xmlRequest.dir.shift().replace(/bId/,bId);
+      console.log(xmlRequest.dir);
       var url = xmlRequest.dir.shift().replace(/bId/,bId);
       // /touch/.test(click)
       // new RegExp(paraSearch, "i").test(v.innerHTML)

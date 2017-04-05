@@ -13,13 +13,18 @@ file: {
   urlLocal: 'bible/bId.xml',
   lang: 'lang/bible.json',
   urlAPI: [
-    'https://drive.google.com/uc?export=download&id=gId',
-    'http://api.laisiangtho.com/bible/bId.xml',
-    'https://storage.googleapis.com/api.laisiangtho.com/bible/bId.xml',
-    'https://raw.githubusercontent.com/laisiangtho/core/master/dev/bible/bId.xml',
-    'bible/bId.xml'
+    'http://api.laisiangtho.com/bible/bId.xml','https://storage.googleapis.com/api.laisiangtho.com/bible/bId.xml','https://raw.githubusercontent.com/laisiangtho/core/master/dev/bible/bId.xml'
   ]
 },
+/*
+urlAPI: [
+  'https://drive.google.com/uc?export=download&id=gId',
+  'http://api.laisiangtho.com/bible/bId.xml',
+  'https://storage.googleapis.com/api.laisiangtho.com/bible/bId.xml',
+  'https://raw.githubusercontent.com/laisiangtho/core/master/dev/bible/bId.xml',
+  'bible/bId.xml'
+]
+*/
 // https://drive.google.com/uc?export=download&id=gId
 // https://storage.googleapis.com/api.laisiangtho.com/bible/bId.json
 // https://raw.githubusercontent.com/laisiangtho/core/master/dev/bible/bId.xml
