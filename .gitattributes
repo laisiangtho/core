@@ -26,5 +26,5 @@
 /api                export-ignore
 /asset              export-ignore
 /dev                export-ignore
-#/docs               export-ignore
-#!/docs/*            export-ignore
+/docs               export-ignore
+!/docs/*            export-ignore
