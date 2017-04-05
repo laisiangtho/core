@@ -17,14 +17,16 @@
 *.RTF	 diff=astextplain
 
 
-# Composer package excluded
+# Export Configuration
 /.git               export-ignore
 .gitattributes      export-ignore
 .gitignore          export-ignore
 .editorconfig       export-ignore
+LICENSE             export-ignore
+README              export-ignore
 
 /api                export-ignore
 /asset              export-ignore
 /dev                export-ignore
-/docs               export-ignore
-!/docs/*            export-ignore
+#/docs              export-ignore
+#!/docs/*           export-ignore

@@ -61,7 +61,7 @@
     },
     "js":{
       "output":{
-        "beautify": true, 
+        "beautify": false, 
         "comments":"license"
       },
       "compress":true,
