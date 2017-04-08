@@ -15,121 +15,86 @@
 </head>
 
 <body>
-  <header>
-    <ul>
-      <!-- <li class="home icon-fire" data-link="dataLinkLogo"><span>Lai Siangtho</span></li> -->
-      <li class="men">
-        <div class="men icon-panel" data-content="nav menu" title="Menu"></div>
-      </li>
-      <li class="dig">
-        <ul>
-          <li>
-            <form method="GET" name="lookup" data-content="lookup form">
-              <label><span class="icon-bible"></span></label>
-              <label><input name="q" type="text" autocomplete="off"></label>
-              <label>
-                <a href="#lookup?" class="lookup result" title="pasian kiangah" empty="true"></a>
-                <span class="icon-strong-down"></span>
-              </label>
-              <label for="search"><input name="search" type="submit" value="" class="io"></label>
-              <ul class="hW">
-                <li empty="true">
-                  <ul>
-                    <li>scrollbar, search setting scrollbar, search setting</li>
-                    <li>scrollbar, search setting scrollbar, search setting scrollbar, search scrollbar, search setting scrollbar, search</li>
-                  </ul>
-                </li>
-              </ul>
-            </form>
-          </li>
-          <li>
-            <div class="lookup setting fO icon-flag" title="Lookup" data-content="lookup setting"></div>
-            <ul class="hO" style="display:none;">
-              <!-- ol.list-lookup -->
-              <li class="scrollbar"></li>
-            </ul>
-          </li>
-        </ul>
-      </li>
-      <li class="ctl">
-        <ul>
-          <li>
-            <div class="icon-bookmark" title="Bookmark"></div>
-            <ul class="hO" style="display:none;">
-              <!-- ol.list-bookmark -->
-              <li class="scrollbar">
-              </li>
-            </ul>
-          </li>
-          <li>
-            <div class="icon-language" title="Parallel" data-content="parallel menu"></div>
-            <ul class="hO" style="display:none;">
-              <!-- ol.list-parallel -->
-              <li class="scrollbar">
-              </li>
-            </ul>
-          </li>
-          <li>
-            <div class="icon-slim-left" data-link="chapter previous" title="Previous chapter"></div>
-          </li>
-          <li>
-            <div class="chapter list fO" data-content="chapter current" title="Chapter">199</div>
-            <ul class="hO" style="display:none;">
-              <!-- ol.list-chapter -->
-              <li class="scrollbar" empty="true"></li>
-            </ul>
-          </li>
-          <li>
-            <div class="icon-slim-right" data-link="chapter next" title="Next chapter"></div>
-          </li>
-        </ul>
-        <ul id="book" class="book">
-          <li>Book</li>
-          <li class="lookup">...</li>
-        </ul>
-        <ul id="lookup" class="lookup">
-          <li>Lookup</li>
-          <li>...</li>
-        </ul>
-      </li>
-    </ul>
-  </header>
-  <nav>
-    <dl>
+  <div id="dialog" style="display:none">
+    <div>
+      <div class="message"></div>
+      <p class="okey">Ok</p>
+      <p class="cancel">Cancel</p>
+    </div>
+  </div>
+  <nav style="display:none">
+    <dl id="slider">
       <dt>
-        <p class="icon-fire" title="Lai Siangtho"><span>Lai Siangtho</span></p>
+        <p class="icon-fire"><span>Lai Siangtho</span></p>
       </dt>
       <dd></dd>
     </dl>
   </nav>
+  <header>
+    <ul>
+      <li class="men icon-panel" data-content="nav menu"></li>
+      <li class="ctl">
+        <ul class="active">
+          <li class="link-bookmark">
+            <div class="icon-bookmark unusable" data-content="bookmark menu"></div>
+            <ul class="hO">
+              <li></li>
+            </ul>
+          </li>
+          <li class="link-parallel">
+            <div class="icon-language" title="Parallel" data-content="parallel menu"></div>
+            <ul class="hO">
+              <li></li>
+            </ul>
+          </li>
+          <li class="link-chapter">
+            <div class="chapter list" data-content="chapter current" title="Wait"></div>
+            <ul class="hO">
+              <li></li>
+            </ul>
+          </li>
+          <li class="link-previous">
+            <div class="icon-slim-left" data-link="chapter previous"></div>
+          </li>
+          <li class="link-next">
+            <div class="icon-slim-right" data-link="chapter next"></div>
+          </li>
+        </ul>
+        <ul class="book">
+          <li>Book...</li>
+        </ul>
+        <ul class="lookup">
+          <li class="link-bookmark">
+            <div class="icon-bookmark unusable" data-content="bookmark menu"></div>
+            <ul class="hO">
+              <li></li>
+            </ul>
+          </li>
+          <li class="link-parallel">
+            <div class="icon-language" title="Parallel" data-content="parallel menu"></div>
+            <ul class="hO">
+              <li></li>
+            </ul>
+          </li>
+          <li class="link-lookup">
+            <form method="GET" name="lookup" data-content="lookup form">
+              <label><input name="q" type="search" autocomplete="off"></label>
+            </form>
+          </li>
+          <li class="link-setting">
+            <div class="icon-flag" title="Lookup" data-content="lookup setting"></div>
+            <ul class="hO">
+              <li></li>
+            </ul>
+          </li>
+        </ul>
+      </li>
+    </ul>
+  </header>
   <main>
-    <div class="container bible"></div>
-    <div class="container book"></div>
-    <div class="container reader">
-      <ol class="parallel">
-        <li class="tedim">
-          <ol class="book">
-            <li class="bookId">
-              <h3>Piancilna</h3>
-              <ol class="chapter">
-                <li class="chapterId">
-                  <div>
-                    <h4>1</h4>
-                  </div>
-                  <ol class="verse">
-                    <li class="verseId">A kipat cilin Pasian in vantung leh leitung a piangsak hi.</li>
-                  </ol>
-                </li>
-              </ol>
-            </li>
-          </ol>
-        </li>
-        <li class="mcl">
-        </li>
-      </ol>
-    </div>
+    <div class="container bible book"></div>
+    <div class="container chapter"></div>
+    <div class="container lookup"></div>
   </main>
-  <!-- <footer></footer> -->
 </body>
-
 </html>

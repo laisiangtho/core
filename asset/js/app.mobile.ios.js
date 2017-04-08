@@ -5,15 +5,3 @@ Object.defineProperties(app.nav,{
     }
   }
 });
-// Object.defineProperties(app.chapter,{
-// });
-// Object.defineProperties(app.lookup,{
-// });
-// NOTE: page
-// app.page.bible=function(resolve, reject){};
-// NOTE: page
-// app.page.book=function(resolve, reject){};
-// NOTE: page
-// app.page.reader=function(resolve, reject){};
-// NOTE: page
-// app.page.lookup=function(resolve, reject){};

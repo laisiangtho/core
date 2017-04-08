@@ -1,3 +1,4 @@
+/*
 Object.defineProperties(app.nav,{
   menu:{
     value:function(e){
@@ -9,3 +10,11 @@ Object.defineProperties(app.nav,{
     }
   },
 });
+*/
+app.nav.menu=function(e){
+  app.Toggle.nav(e,function(){
+    document.body.classList.add('nav');
+  },function(){
+    document.body.classList.remove('nav');
+  });
+};

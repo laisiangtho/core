@@ -44,7 +44,6 @@ this.download=function(progressCallback){
     },
     process:function(successCallback,failCallback){
       // var url = xmlRequest.dir.shift().replace(/bId/,bId);
-      console.log(xmlRequest.dir);
       var url = xmlRequest.dir.shift().replace(/bId/,bId);
       // /touch/.test(click)
       // new RegExp(paraSearch, "i").test(v.innerHTML)
