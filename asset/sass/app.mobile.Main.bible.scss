@@ -16,6 +16,7 @@
       // height: 30px;
       // box-shadow: 0 0 0 0 darken($BackgroundColor,15%);
       white-space: nowrap;
+      touch-action: none;
       * {
         display: table-cell; vertical-align: middle; padding: 6px;
       }
@@ -53,6 +54,7 @@
         &:last-child {
           width:40px;
           // font-size: 130%;
+          cursor: move; cursor: -webkit-grabbing;
           &:before {
             font-size: 120%; color: lighten($ColorNone,10%);
           }
@@ -86,6 +88,18 @@
     }
     &:last-child{
       border-bottom: 0;
+    }
+    &.drag-fallback{
+      display: none;
+    }
+    &.drag-chosen.drag-ghost{
+      span{
+        &:last-child {
+          &:before {
+            color: red;
+          }
+        }
+      }
     }
   }
 }

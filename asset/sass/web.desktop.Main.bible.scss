@@ -55,6 +55,8 @@
           }
         }
         &:last-child {
+          cursor: move;
+          cursor: -webkit-grabbing;
           &:hover {
             &:before {
               color:$ColorRed;
