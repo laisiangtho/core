@@ -5,6 +5,7 @@ page: {
   // =require script.Page.chapter.js
   // =require script.Page.lookup.js
   // =require script.Page.note.js
+  // =require script.Page.export.js
   //require script.Page.help.js
 },
 xml:function(bId){

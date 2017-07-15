@@ -54,7 +54,7 @@
             }
           }
         }
-        &:last-child {
+        &.drag {
           cursor: move;
           cursor: -webkit-grabbing;
           &:hover {
@@ -62,6 +62,10 @@
               color:$ColorRed;
             }
           }
+        }
+        &.export {
+          cursor: default;
+          color:$ColorRed;
         }
       }
       a{

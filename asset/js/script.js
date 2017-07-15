@@ -13,6 +13,9 @@
         - [ ]setting
       * [ ]template start
       */
+      if (app.hasMethodProperty('configurations'))app.config.merge(app.configurations());
+      // console.log(app.testdesktop());
+      // console.log(app.config.page);
       var configuration = app.config, local = app.localStorage;
       delete configuration.Meta;
       delete configuration.DeviceName;
@@ -74,7 +77,6 @@
           });
         });
       }, function(e) {
-        console.log(e);
         if (typeof e === 'object' && e.hasOwnProperty('message')) {
           app.notification(e.message);
         } else if (typeof e === 'string') {

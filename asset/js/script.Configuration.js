@@ -58,20 +58,24 @@ todo: {
 // NOTE: page
 page:{
   bible:{
-    class:'icon-cross'
+    class:'icon-cross',
+    name:'Bible'
   },
   book:{
-    class:'icon-book'
+    class:'icon-book',
+    name:'Book'
   },
   chapter:{
-    class:'icon-chapter'
+    class:'icon-chapter',
+    name:'Chapter'
   },
   lookup:{
-    class:'icon-search'
+    class:'icon-search',
+    name:'Lookup'
   },
-  note:{
-    class:'icon-note'
-  },
+  // note:{
+  //   class:'icon-note'
+  // },
   // setting:{
   //   class:'icon-setting'
   // },

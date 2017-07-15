@@ -11,4 +11,4 @@ note:function(resolve, reject){
   // var lOb = Query.ref('Gen.1.3');
   var lOb = Query.ref(text).result;
   console.log(lOb);
-}
+},

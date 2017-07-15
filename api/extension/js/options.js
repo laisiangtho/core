@@ -12,11 +12,17 @@ show*
 // https://www.bible.com/bible/131/mat.5.1.json
 // http://www.bible.is/ENGESV/Gen/1?chapter=1&verse=4
 
+// https://events.bible.com/api/bible/version/3.1?id=1209
+
 var testScan = 0;
 var ApiLanguage= 'https://www.bible.com/versions.json';
-var ApiBible = 'https://www.bible.com/versions/lId.json';
-var ApiChapter = 'https://www.bible.com/bible/lId/bId.cId.json';
-var ApiVerse = 'https://www.bible.com/bible/lId/bId.cId.vId.json';
+// var ApiBible = 'https://www.bible.com/versions/lId.json';
+var ApiBible = 'https://events.bible.com/api/bible/version/3.1?id=lId';
+// var ApiChapter = 'https://www.bible.com/bible/lId/bId.cId.json';
+var ApiChapter = 'https://events.bible.com/api/bible/chapter/3.1?id=lId&reference=cId.2';
+
+// var ApiVerse = 'https://www.bible.com/bible/lId/bId.cId.vId.json';
+var ApiVerse = 'https://events.bible.com/api/bible/verse/3.1?id=lId&reference=bId.cId.vId';
 
 var urlLocalBible = 'lId.xml';
 var urlLocalBook = 'lId/bId.xml';
@@ -227,16 +233,24 @@ scriptive({
           currentBibleId = seedBible.shift();
           seedBook = JSON.parse(JSON.stringify(books));
           file.download({
+            // url:chrome.extension.getURL(ApiBible.replace('lId',currentBibleId)),
             url:ApiBible.replace('lId',currentBibleId),
-            before:function(e){
-              e.overrideMimeType('application/json; charset=utf-8');
+            before: function(xhr){
+              // xhr.setRequestHeader("Access-Control-Allow-Origin", "*");
+              // xhr.setRequestHeader("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
+              xhr.overrideMimeType('application/json; charset=utf-8');
+              xhr.withCredentials = true;
             },
             progress:function(e){
               eDv.innerHTML='Processing lId Done%'.replace('lId',currentBibleId).replace('Done',e);
             }
           }).then(function(e){
-            currentBible = JSON.parse(e.data)[0];
+            currentBible = JSON.parse(e.data);
             currentBibleId = currentBible.id;
+            // console.log(e,currentBibleId);
+  
+            // currentBible = JSON.parse(e.data)[0];
+            // currentBibleId = currentBible.id;
             console.log('...',currentBibleId,currentBible.title);
             getXMLFormat(function(){
               // ApiBibleResponse.title
@@ -271,6 +285,7 @@ scriptive({
               saveMessage('XMLFormat','XMLFormat download Error');
               getBible(false);
             });
+
           },function(e){
             // NOTE: versions/lId.json download Error, and sendback to getBible
             saveMessage('lId','versions/lId.json download Error');
@@ -327,7 +342,11 @@ scriptive({
     var getChapter=function(is){
       if (currentBook.chapters.length) {
         currentChapter = currentBook.chapters.shift();
+        if (currentChapter.human == 'Introduction'){
+          return getChapter(is);
+        }
         currentChapterId = parseInt(currentChapter.human);
+        // console.log(currentChapter);
         if (testScan > 0 && testScan < currentChapterId){
           // NOTE: test ON and sendback to getBook
           currentBook.chapters=[];
@@ -365,9 +384,13 @@ scriptive({
         var localMessageId = 'bId.cId.vId'.replace('bId',currentBookShort).replace('cId',currentChapterId).replace('vId',currentVerseId);
         var currentStatusMessage = 'bId cId:vId Done%'.replace('bId',currentBookName).replace('cId',currentChapterId).replace('vId',currentVerseId);
         return file.download({
-          url:ApiVerse.replace('lId',currentBibleId).replace('bId',currentBookShort).replace('cId',currentChapterId).replace('vId',currentVerseId),
-          before:function(e){
-            e.overrideMimeType('application/json; charset=utf-8');
+          // url:chrome.extension.getURL(ApiVerse.replace('lId',currentBibleId).replace('bId',currentBookShort).replace('cId',currentChapterId).replace('vId',currentVerseId)),
+          url:ApiVerse.replace('lId',currentBibleId).replace('bId',currentBookShort.toUpperCase()).replace('cId',currentChapterId).replace('vId',currentVerseId),
+          before: function(xhr){
+            xhr.setRequestHeader("Access-Control-Allow-Origin", "*");
+            xhr.setRequestHeader("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
+            xhr.overrideMimeType('application/json; charset=utf-8');
+            xhr.withCredentials = true;
           },
           progress:function(n){
             eDv.innerHTML=currentStatusMessage.replace('Done',n);
@@ -376,8 +399,13 @@ scriptive({
         }).then(function(e){
           try {
             var json = JSON.parse(e.data);
-            if (json.hasOwnProperty('reader_html') && json.reader_html) {
-              createVerse(currentVerseId,json.reader_html);
+            // if (json.hasOwnProperty('reader_html') && json.reader_html) {
+            //   createVerse(currentVerseId,json.reader_html);
+            // } else {
+            //   saveMessage(localMessageId,'verse Empty');
+            // }
+            if (json.hasOwnProperty('content') && json.content) {
+              createVerse(currentVerseId,json.content);
             } else {
               saveMessage(localMessageId,'verse Empty');
             }
@@ -692,8 +720,15 @@ scriptive({
   },
   getVersionsContent:function(url){
     return file.open({
+      // urlLocal:chrome.extension.getURL('https://www.bible.com/versions.json'),
       urlLocal:'versions.json',
-      readAs: 'readAsText'
+      // requestMethod:'POST',
+      readAs: 'readAsText',
+      // before: function(xhr){
+      //   // xhr.setRequestHeader("Access-Control-Allow-Origin", "*");
+      //   // xhr.setRequestHeader("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
+      //   // xhr.withCredentials = true;
+      // }
     });
   },
   getVersions:function(){
@@ -725,15 +760,27 @@ scriptive({
   },
   getVersionsDownload:function(){
     return file.download({
-      url: 'https://www.bible.com/versions.json',
+      url:ApiLanguage,
+      // url:chrome.extension.getURL(ApiLanguage),
       urlLocal:'versions.json',
-      // readAs: 'createObjectURL'
+      // requestMethod:'POST',
+      readAs: 'readAsText',
+      before: function(xhr){
+        xhr.setRequestHeader("Access-Control-Allow-Origin", "*");
+        xhr.setRequestHeader("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
+        // xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
+        xhr.withCredentials = true;
+        xhr.responseType='json'
+      },
+      // url: 'https://www.bible.com/versions.json',
+      // urlLocal:'versions.json',
+      // // readAs: 'createObjectURL'
       fileOption:{
         create:true
       },
-      before: function(xmlHttp){
-        xmlHttp.responseType='json';
-      },
+      // before: function(xmlHttp){
+      //   xmlHttp.responseType='json';
+      // },
       progress: function(Percentage){
         // console.log(Percentage);
         elementMessage.innerHTML=Percentage;

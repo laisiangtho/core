@@ -109,9 +109,9 @@ var selectorBible=function(containerBible,callbackVerse){
         if (xmlBook) {
           result.book++;
           // result.parallel[bookId]={};
-          var abc = selectorChapter(q);
+          // var abc = selectorChapter(q);
           // console.log(bookId,abc);
-          var xmlChapters = xmlBook.querySelectorAll(abc);
+          var xmlChapters = xmlBook.querySelectorAll(selectorChapter(q));
           if (xmlChapters.length){
             xmlChapters.each(function(i,xmlChapter,queryVerse,lastChapter){
               result.chapter++;
@@ -158,6 +158,7 @@ var selectorBible=function(containerBible,callbackVerse){
     }
   });
 };
+// =require script.Content.exportor.js
 var selectorBook=function(i){
   return 'book[id="0"]'.replace(0,i);
 };
@@ -243,6 +244,16 @@ var responseBible={
         container.appendChild(html.verse(verseId,verseText));
         return true;
       }
+    });
+  },
+  export:function(container){
+    // \n, \t
+    // var container = ['book','chapter','verse','text'].join(',')
+    // var containerA1 ='"book","chapter","verse","text"\n';
+    // var containerA1 ='"book","chapter","verse","text"';
+    return exportorBible(container,function(xml,query){
+      // var verseId = xml.getAttribute('id'), verseText =xml.textContent || xml.innerText;
+      return true;
     });
   }
 };
