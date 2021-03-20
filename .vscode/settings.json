@@ -1,0 +1,15 @@
+{
+  "files.trimFinalNewlines": true,
+  "files.trimTrailingWhitespace": true,
+  "editor.renderLineHighlight": "none",
+  "editor.detectIndentation": false,
+  "editor.fontSize": 13,
+  "files.exclude": {
+    "index.js": true,
+    "min.js": true,
+    "configuration.js": true,
+    "notation.js": true,
+  },
+  "editor.tabSize": 2,
+  "editor.fontLigatures": null
+}
