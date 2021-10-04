@@ -2,7 +2,7 @@
   "files.trimFinalNewlines": true,
   "files.trimTrailingWhitespace": true,
   "editor.renderLineHighlight": "none",
-  "editor.detectIndentation": false,
+  "editor.detectIndentation": true,
   "editor.fontSize": 13,
   "files.exclude": {
     "index.js": true,
@@ -11,5 +11,9 @@
     "notation.js": true,
   },
   "editor.tabSize": 2,
-  "editor.fontLigatures": null
+  "[dart]": {
+    "editor.defaultFormatter": "Dart-Code.dart-code",
+    "editor.formatOnSave": false,
+    "editor.formatOnType": true,
+  },
 }

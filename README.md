@@ -1,5 +1,35 @@
-# Lai Siangtho 
+# Lai Siangtho
+
 the Holy Bible in languages!
+
+Lai Siangtho
+Bible
+Hoble
+
+MyOrdbok
+Dictionary
+Ordbok
+Dicle
+myordbok
+Zaideih
+Music
+Musle
+Dodot
+
+myordbok
+myordbok-app
+zaideih-app
+laisiangtho-app
+
+dictionary-app
+music-app
+bible-app
+
+
+lidea
+midea
+zidea
+
 
 ```json
 // scriptive.json
@@ -27,7 +57,7 @@ the Holy Bible in languages!
 ## Todo
 
 * Initiate (terminal)
-  - [x]version from setting -> 
+  - [x]version from setting ->
   - [x]language
   - [x]query
   - [x]setting
@@ -75,7 +105,7 @@ the Holy Bible in languages!
   [x] responsive design
 * Parallel menu
   [x] icon for switch Primary language
-  [x] text for Parallel 
+  [x] text for Parallel
   [x] unusable responsive
 * hO
  - [x] content inline-display
