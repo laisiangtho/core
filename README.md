@@ -25,11 +25,9 @@ dictionary-app
 music-app
 bible-app
 
-
 lidea
 midea
 zidea
-
 
 ```json
 // scriptive.json
