@@ -1,0 +1,269 @@
+/*
+ * Styles for what Phase 1 did not have: the Library and Settings documents,
+ * cross-reference lines, the books pane wrapper and the status groups.
+ * Tokens only — the ramp lives in shell.css.
+ */
+
+/* Documents in a workspace leaf */
+.doc { max-width: 60rem; margin: 0 auto; padding: 28px 40px 48px; font-family: var(--font-ui); }
+.doc-head { margin-bottom: 18px }
+.doc-head p { margin: 0 0 6px; }
+.doc h2 { font-size: 1rem; font-weight: 600; margin: 26px 0 8px; }
+.muted { color: var(--text-faint); font-size: var(--fs-ui-m); }
+.badge {
+  font-size: 10px; padding: 1px 7px; border-radius: 999px;
+  background: var(--c-orange); color: #111; font-weight: 600;
+}
+.badge-ok { background: var(--c-green); }
+
+/* Library */
+.library-group h2 { color: var(--text-faint); font-size: var(--fs-ui-m); font-weight: 500; }
+.library-list {
+  list-style: none; margin: 0; padding: 0;
+  border: 1px solid var(--border); border-radius: var(--radius-m); overflow: hidden;
+}
+.library-item {
+  display: flex; align-items: center; justify-content: space-between; gap: 16px;
+  padding: 10px 12px; background: var(--bg-secondary);
+}
+.library-item + .library-item { border-top: 1px solid var(--border); }
+.library-item:hover { background: var(--bg-hover); }
+.library-meta { display: flex; flex-wrap: wrap; gap: 8px; align-items: baseline; min-width: 0; }
+.library-meta strong { font-weight: 600; color: var(--text-normal); }
+.library-actions { display: flex; gap: 6px; flex: 0 0 auto; }
+
+/* Settings */
+.settings-list { display: grid; grid-template-columns: max-content 1fr; gap: 6px 18px; margin: 18px 0; }
+.settings-list dt { color: var(--text-faint); }
+.settings-list dd { margin: 0; color: var(--text-muted); }
+.settings-actions { display: flex; gap: 8px; margin: 14px 0 6px; }
+.settings-import { margin-top: 28px; border-top: 1px solid var(--border); padding-top: 16px; }
+.settings-import ul { margin: 0 0 12px; padding-inline-start: 20px; color: var(--text-muted); }
+
+/* Cross-references under a verse */
+.xrefs {
+  margin: 2px 0 10px; padding-inline-start: 2px;
+  font-family: var(--font-ui); font-size: var(--fs-ui-s); line-height: 1.5; color: var(--text-faint);
+}
+.xref { color: var(--accent-2); font: inherit; border-radius: var(--radius-s); padding: 0 2px; }
+.xref:hover { background: var(--accent-fade); }
+/* A reference whose book abbreviation is not resolved: readable, not a link. */
+.xref-plain { border-bottom: 1px dotted var(--base-40); cursor: help; }
+
+/* A hair of padding stops the first heading's margin collapsing through the
+   chapter's top edge, so levelling the columns measures what it applies. */
+.chapter { padding-top: 0.02px; }
+
+/* A verse and everything that belongs to it, measured as one unit */
+.vblock { display: block; }
+.chapter.flow .vblock { display: inline; }
+
+/* Section headings inside a chapter */
+.chapter .story-head { margin-top: 28px; }
+.chapter .verse-title {
+  font-family: var(--font-ui); font-size: 0.82em; font-weight: 600; font-style: italic;
+  color: var(--text-muted); margin: 18px 0 4px;
+}
+
+/* The sidebar's pane stack: Phase 1 put pane views straight in the aside, so
+   the wrapper has to carry the same flex behaviour. */
+.side-body { flex: 1; min-height: 0; display: flex; flex-direction: column; }
+.pane-view.is-active { display: flex; }
+.pane-body.scroll { overflow: auto; }
+
+/* Books pane */
+.files-pane { display: flex; flex-direction: column; min-height: 0; padding-top: 2px; }
+.files-pane .field { margin-inline: 0; }
+
+/* Status bar groups */
+.sb-group { display: flex; align-items: center; gap: 14px; min-width: 0; }
+
+
+/* Search pane */
+.search-pane { display: flex; flex-direction: column; min-height: 0; padding-top: 2px; }
+.search-pane .field { margin-inline: 0; }
+.search-scope { padding: 0 0 6px; }
+.search-scope select { width: 100%; }
+.search-results { min-height: 0; }
+.result-head, .result-line { width: 100%; text-align: start; font: inherit; }
+.result-line .kbd { margin-inline-end: 4px; }
+
+/* Bookmarks pane */
+.mark-row { display: flex; align-items: flex-start; gap: 4px; }
+.mark-open {
+  flex: 1; min-width: 0; text-align: start; font: inherit; color: var(--text-muted);
+  padding: 6px 8px; border-radius: var(--radius-m); display: grid; gap: 2px;
+}
+.mark-open:hover { background: var(--bg-hover); color: var(--text-normal); }
+.mark-ref { font-size: var(--fs-ui-m); font-weight: 600; color: var(--text-normal); }
+.mark-text {
+  font-size: var(--fs-ui-s); color: var(--text-faint); line-height: 1.5;
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+}
+.mark-remove {
+  flex: 0 0 auto; width: 24px; height: 24px; display: grid; place-items: center;
+  border-radius: var(--radius-s); color: var(--text-faint);
+}
+.mark-remove:hover { background: var(--bg-hover); color: var(--c-red); }
+
+/* Notes pane */
+.notes-pane { padding-top: 6px; }
+.note-target-row { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.note-text { margin: 0; white-space: pre-wrap; }
+.note-actions { display: flex; gap: 6px; margin-top: 8px; }
+
+/* A verse that carries a note or a bookmark */
+.verse-note-dot {
+  margin-inline-start: 6px; color: var(--accent-2); vertical-align: 0.15em;
+  border-radius: var(--radius-s); padding: 0 2px;
+}
+.verse-note-dot svg { width: 12px; height: 12px; }
+.verse-note-dot:hover { background: var(--accent-fade); }
+.verse.is-marked[data-colour="green"] { background: rgba(68, 207, 110, .10); box-shadow: inset 2px 0 0 var(--c-green); }
+.verse.is-marked[data-colour="blue"] { background: rgba(106, 159, 255, .10); box-shadow: inset 2px 0 0 var(--c-blue); }
+.verse.is-marked[data-colour="purple"] { background: rgba(168, 130, 255, .10); box-shadow: inset 2px 0 0 var(--c-purple); }
+.verse.is-marked[data-colour="red"] { background: rgba(251, 70, 76, .10); box-shadow: inset 2px 0 0 var(--c-red); }
+
+/* Strong's numbers, where a translation carries them */
+.strongs-code { font-family: var(--font-ui); font-size: .62em; color: var(--c-orange); margin-inline-start: .12em; }
+
+/* Reading panel value readout */
+.rp-val { min-width: 3.4em; text-align: end; font-variant-numeric: tabular-nums; color: var(--text-muted); font-size: var(--fs-ui-s); }
+
+/* Dragging */
+.leaf.is-dragging { opacity: .6; }
+body.is-dragging-ui { user-select: none; cursor: grabbing; }
+.resizer.is-active::after, .resizer:hover::after {
+  content: ""; position: absolute; inset-block: 0; inset-inline-start: 3px;
+  width: 2px; border-radius: 2px; background: var(--accent-line);
+}
+
+/* The app mark in the ribbon and the title pill */
+.app-mark img { width: 20px; height: 20px; border-radius: 5px; display: block; }
+
+/* Popover arrow: the base rule Phase 1's .vbar::before and .rpanel.no-arrow
+   overrides expect. It points at whatever opened the popover (--arrow-x). */
+.popover.has-arrow::before {
+  content: ""; position: absolute; top: -7px; left: calc(var(--arrow-x, 24px) - 6px);
+  width: 12px; height: 12px; background: inherit;
+  border: 1px solid var(--border-strong); border-right: 0; border-bottom: 0;
+  border-top-left-radius: 3px; transform: rotate(45deg);
+}
+.popover.has-arrow.is-above::before { top: auto; bottom: -7px; transform: rotate(225deg); }
+.rpanel .rp-foot span { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+/* A float reports its size while it is resized */
+.float-size {
+  position: absolute; inset-inline-end: 10px; bottom: 10px; z-index: 2;
+  padding: 2px 7px; border-radius: var(--radius-s);
+  background: var(--bg-elevated); border: 1px solid var(--border-strong);
+  font: 11px var(--font-ui); color: var(--text-muted); font-variant-numeric: tabular-nums;
+  opacity: 0; transition: opacity var(--speed);
+}
+.float-win.is-sizing .float-size { opacity: 1; }
+
+/* Sidebar pane tabs being dragged */
+.pane-tab.is-dragging { opacity: .4; }
+.pane-tabs { position: relative; }
+
+/* ---- notes manager: Phase 1 styles the table; these fill the gaps --------*/
+.nm .note-sub { color: var(--text-faint); font-size: var(--fs-ui-s); margin-top: 2px; }
+.nm-tools .rp-seg { flex: 0 0 auto; }
+.nm-tools .rp-seg button { padding: 4px 9px; white-space: nowrap; }
+
+/* ---- outline -------------------------------------------------------------*/
+.outline-row {
+  display: flex; gap: 8px; align-items: baseline; width: 100%; text-align: start;
+  padding: 5px 8px; border-radius: var(--radius-s); color: var(--text-muted);
+  font-size: var(--fs-ui-m); line-height: 1.45;
+}
+.outline-row:hover { background: var(--bg-hover); color: var(--text-normal); }
+.outline-row.level-1 { color: var(--text-normal); font-weight: 600; }
+.outline-row.level-2 { padding-inline-start: 20px; }
+
+/* ---- reading plan --------------------------------------------------------*/
+.plan-daily, .plan-card { padding: 12px; }
+
+/* ---- full-surface documents: graph and board -----------------------------*/
+.doc-full { display: flex; flex-direction: column; min-height: 0; height: 100%; padding: 0; }
+.board-surface { position: relative; flex: 1; min-height: 0; display: flex; }
+.board-edit {
+  position: absolute; z-index: 3; resize: none;
+  padding: 34px 13px 12px; border-radius: 10px;
+  background: var(--card-face); border: 2px solid var(--accent-1); color: var(--text-normal);
+  font: 13px system-ui, sans-serif;
+}
+
+/* ---- resize handles: no mark at all --------------------------------------*/
+/* The grip drew itself under the pointer on hover and, while a drag was
+   running, at the top of the window — a percentage offset inside a handle whose
+   height is decided by layout does not resolve the same way in both states. The
+   edge moving under the pointer and the resize cursor are the feedback; the
+   grip is gone in every state, which also removes the bug. */
+.resizer::after,
+.leaf-divider::after,
+.row-divider::after { display: none; }
+
+/* ---- the new-tab button at the end of the strip --------------------------*/
+.tab-new {
+  flex: 0 0 auto; align-self: center; width: 26px; height: 26px; margin-inline-start: 4px;
+  border-radius: var(--radius-m); display: grid; place-items: center;
+  color: var(--text-faint); transition: background var(--speed), color var(--speed);
+}
+.tab-new:hover { background: var(--bg-hover); color: var(--text-normal); }
+.tab-new svg { width: 15px; height: 15px; }
+
+/* ---- shortcut table ------------------------------------------------------*/
+.doc-filter { max-width: 320px; margin: 0 0 10px; }
+.key-row .k .kbd + .kbd { margin-inline-start: 2px; }
+.task .k { display: flex; gap: 3px; }
+
+/* ---- appearance controls in Settings -------------------------------------*/
+.settings-h { font-size: var(--fs-ui-l); font-weight: 650; color: var(--text-normal); margin: 22px 0 8px; }
+.accent-swatch {
+  width: 26px; height: 26px; border-radius: 50%; flex: 0 0 auto;
+  box-shadow: 0 0 0 1px rgba(128, 128, 128, .35);
+}
+.accent-swatch.is-on { box-shadow: 0 0 0 2px var(--bg-primary), 0 0 0 4px var(--accent); }
+.accent-pick {
+  display: inline-flex; align-items: center; gap: 7px; cursor: pointer;
+  padding: 5px 11px; border-radius: var(--radius-m); border: var(--divider);
+  color: var(--text-muted); font-size: var(--fs-ui-m);
+}
+.accent-pick input[type="color"] {
+  width: 22px; height: 22px; padding: 0; border: 0; background: none; cursor: pointer;
+}
+
+/* ---- scripts that need more room than the Latin default ------------------*/
+/* Files name their language by ISO 639-3 ("mya", "ctd"), so every script rule
+   has to match both codes: `:lang(my)` alone never matches `lang="mya"`.
+   The extra height is a multiple of the reader's own line height rather than a
+   fixed number, so the reading panel still moves Burmese text.
+
+   Burmese stacks marks above the consonant (ိ ီ ံ), below it (ု ူ) and to its
+   side (ျ ြ ွ ှ), and marks the killed consonant with an asat (်). A line of it
+   is roughly twice the ink height of a Latin line, so at 1.5–1.66 the rows
+   collide. It also writes without spaces between words, which is why the
+   language has to reach the element: the browser's own line breaker needs it. */
+:is(.chapter, .pd-text, .note):is(:lang(my), :lang(mya)) {
+  font-family: "Myanmar Text", "Noto Sans Myanmar", "Noto Serif Myanmar", "Padauk",
+               "Myanmar MN", "Myanmar Sangam MN", var(--font-text);
+  line-height: calc(var(--lh-text) * 1.26);
+}
+:is(.chapter, .pd-text, .note):is(:lang(ar), :lang(ara), :lang(fa), :lang(ur)) {
+  font-family: "Noto Naskh Arabic", "Amiri", "Geeza Pro", "Traditional Arabic", var(--font-text);
+  font-size: calc(var(--fs-text) * 1.12);
+  line-height: calc(var(--lh-text) * 1.16);
+}
+
+/* Chrome that carries a name in the text's own script: give the line room and
+   never clip it, whatever the container's own height. */
+:is(.t-name, .tree-label, .crumb span, .np-name, .sb span, .ch-caption):is(:lang(my), :lang(mya)) {
+  line-height: 1.75;
+  padding-block: 1px;
+}
+.tab .t-name:is(:lang(my), :lang(mya)) { overflow: visible; }
+
+/* The app's own mark in the status bar, beside its name */
+.sb-mark { width: 14px; height: 14px; border-radius: 3px; display: block; flex: 0 0 auto; }
+.sb[disabled] { opacity: .4; pointer-events: none; }

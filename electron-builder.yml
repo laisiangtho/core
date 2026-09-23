@@ -1,0 +1,23 @@
+# Packaging: out/ (from `npm run desktop:build`) → release/
+appId: org.laisiangtho.app
+productName: Lai Siangtho
+# Stamped by scripts/version.mjs; the build number of the day (see app/version.js)
+buildVersion: "5"
+directories:
+  output: release
+  buildResources: assets
+files:
+  - out/**
+  - package.json
+asar: true
+mac:
+  target: dmg
+  category: public.app-category.reference
+  icon: assets/icon.png
+win:
+  target: nsis
+  icon: assets/icon.png
+linux:
+  target: AppImage
+  category: Education
+  icon: assets/icon.png

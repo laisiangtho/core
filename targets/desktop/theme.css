@@ -1,0 +1,17 @@
+/*
+ * Desktop target theme: token overrides only. Defaults live in app/styles/shell.css.
+ *
+ * The ramp redefines accents per theme (html[data-theme="light"] …), so a
+ * target override has to match that specificity or the ramp wins.
+ */
+html[data-theme="dark"], html[data-theme="light"] {
+  --accent: #0ea5e9;
+  --accent-1: #38bdf8;
+  --accent-2: #7dd3fc;
+  --accent-fade: rgba(14, 165, 233, .14);
+  --accent-line: rgba(14, 165, 233, .42);
+}
+html[data-theme="light"] {
+  --accent-2: #0369a1;
+}
+:root { --sidebar-l: 272px; }

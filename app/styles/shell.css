@@ -1,0 +1,1582 @@
+/*
+ * Phase 1 design system, carried over unchanged: token ramp (dark/light),
+ * shell chrome, reading surface, sidebars, modals, status bar.
+ * Component rules read tokens only; theme swaps happen at :root.
+ */
+/* ============================================================================
+   TOKENS — mirrors Obsidian's own CSS custom property system so that theme
+   swaps happen at the :root level and never inside component rules.
+   ========================================================================== */
+:root{
+  --base-00:#181818; --base-05:#1e1e1e; --base-10:#212121; --base-20:#262626;
+  --base-25:#2a2a2a; --base-30:#303030; --base-35:#3a3a3a; --base-40:#484848;
+  --base-50:#5c5c5c; --base-60:#6e6e6e; --base-70:#9a9a9a; --base-80:#c4c4c4;
+  --base-100:#dadada;
+
+  --accent:#7c3aed; --accent-1:#8b5cf6; --accent-2:#a78bfa;
+  --accent-fade:rgba(124,58,237,.14); --accent-line:rgba(124,58,237,.42);
+
+  --c-red:#fb464c; --c-orange:#e9973f; --c-yellow:#e0de71; --c-green:#44cf6e;
+  --c-cyan:#53dfdd; --c-blue:#6a9fff; --c-purple:#a882ff; --c-pink:#fa99cd;
+
+  --bg-primary:var(--base-00);
+  --bg-secondary:var(--base-05);
+  --bg-elevated:var(--base-20);
+  --bg-hover:rgba(255,255,255,.045);
+  --bg-active:rgba(255,255,255,.075);
+  --bg-selection:rgba(124,58,237,.28);
+
+  --text-normal:var(--base-100);
+  --text-muted:var(--base-70);
+  --text-faint:var(--base-60);
+  --text-on-accent:#fff;
+
+  --border:var(--base-25);
+  --border-strong:var(--base-35);
+  --divider:1px solid var(--border);
+
+  --radius-s:4px; --radius-m:6px; --radius-l:10px; --radius-xl:14px;
+  --radius-tab:5px;    /* the tab's own top-left and top-right */
+  --radius-sheet:7px;  /* the content sheets */
+  --radius-flare:5px;  /* where the tab foot curves into the sheet */
+  --gutter:5px;        /* canvas showing between panels, in place of a border */
+  --shadow-s:0 1px 2px rgba(0,0,0,.28);
+  --shadow-m:0 6px 18px rgba(0,0,0,.36);
+  --shadow-l:0 16px 48px rgba(0,0,0,.52),0 2px 8px rgba(0,0,0,.4);
+
+  --font-ui:"Inter var","Inter",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",sans-serif;
+  --font-text:"Iowan Old Style","Source Serif 4","Charter","Palatino Linotype","Book Antiqua",Georgia,serif;
+  --font-mono:ui-monospace,"JetBrains Mono","SFMono-Regular","Cascadia Code","Roboto Mono",Menlo,monospace;
+
+  --fs-ui-s:12px; --fs-ui-m:13px; --fs-ui-l:14px;
+  --fs-text:var(--reading-size,18px);
+  --lh-text:1.66;
+  --measure-em:34;          /* line length in the text's own size; 0 = full width */
+
+  --ribbon-w:44px;
+  --sidebar-l:264px;
+  --sidebar-r:300px;
+  --tab-h:30px;        /* every control in the band is this tall */
+  --bar-gap:6px;       /* breathing room above the tabs; raise this, not bar-h */
+  --bar-h:calc(var(--tab-h) + var(--bar-gap));   /* the single top band */
+  --wc-w:138px;        /* space the window buttons occupy at the corner */
+  --mac-inset:0px;     /* traffic-light strip, set only on darwin */
+  --statusbar-h:24px;
+  --reading-width:44rem;
+  --speed:.14s;
+
+  --mark-bg:rgba(224,222,113,.08);
+  --mark-line:var(--c-yellow);
+  --ink-canvas:rgba(255,255,255,.035);
+  --graph-edge:rgba(255,255,255,.10);
+  --graph-node:#6b6b6b;
+  --graph-label:rgba(218,218,218,.55);
+  --card-face:#1e1e1e;
+  --card-edge:#3a3a3a;
+  --export-from:#181818;
+  --export-to:#241a33;
+  --win-close:#e81123;
+  --glass:rgba(30,30,36,.34);
+  --glass-film:rgba(255,255,255,.075);
+  --glass-edge:rgba(255,255,255,.15);
+  --tabstrip-bg:#0c0c0e;   /* canvas: the frame every sheet sits on */
+  --surface-raised:#262626; /* cards and inputs, lifted off the sheet */
+
+  --tab-purple:var(--c-purple);
+  --tab-cyan:var(--c-cyan);
+  --tab-orange:var(--c-orange);
+  --tab-green:var(--c-green);
+}
+
+/* Light mode remaps the same ramp: base-00 is always the page, base-100 is
+   always the text. No component rule below this block is theme aware. */
+html[data-theme="light"]{
+  --base-00:#ffffff; --base-05:#fbfbfb; --base-10:#f6f6f6; --base-20:#ededed;
+  --base-25:#e4e4e4; --base-30:#dadada; --base-35:#cbcbcb; --base-40:#b4b4b4;
+  --base-50:#949494; --base-60:#767676; --base-70:#585858; --base-80:#3b3b3b;
+  --base-100:#1f1f1f;
+
+  --accent:#6d28d9; --accent-1:#7c3aed; --accent-2:#5b21b6;
+  --accent-fade:rgba(109,40,217,.09); --accent-line:rgba(109,40,217,.32);
+
+  --c-red:#c0392b; --c-orange:#b45309; --c-yellow:#a16207; --c-green:#15803d;
+  --c-cyan:#0e7490; --c-blue:#1d4ed8; --c-purple:#6d28d9; --c-pink:#be185d;
+
+  --bg-secondary:var(--base-10);
+  --bg-elevated:var(--base-00);
+  --bg-hover:rgba(0,0,0,.045);
+  --bg-active:rgba(0,0,0,.075);
+  --bg-selection:rgba(109,40,217,.16);
+
+  --border:var(--base-25);
+  --border-strong:var(--base-35);
+
+  --shadow-s:0 1px 2px rgba(0,0,0,.07);
+  --shadow-m:0 6px 18px rgba(0,0,0,.10);
+  --shadow-l:0 16px 48px rgba(0,0,0,.16),0 2px 8px rgba(0,0,0,.08);
+
+  --mark-bg:rgba(250,204,21,.26);
+  --mark-line:#ca8a04;
+  --ink-canvas:rgba(0,0,0,.045);
+  --graph-edge:rgba(0,0,0,.14);
+  --graph-node:#9a9a9a;
+  --graph-label:rgba(31,31,31,.6);
+  --card-face:#ffffff;
+  --card-edge:#d7d7d7;
+  --export-from:#ffffff;
+  --export-to:#efe9fb;
+  --tabstrip-bg:#e7e7ea;
+  --surface-raised:#ffffff;
+  --glass:rgba(250,250,252,.50);
+  --glass-film:rgba(255,255,255,.35);
+  --glass-edge:rgba(0,0,0,.12);
+  color-scheme:light;
+}
+html[data-theme="light"] .scrim{background:rgba(30,26,40,.28)}
+html[data-theme="light"] .app-mark{box-shadow:inset 0 1px 0 rgba(255,255,255,.4)}
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation-duration:.001ms!important;transition-duration:.001ms!important}
+}
+
+*,*::before,*::after{box-sizing:border-box}
+html,body{height:100%}
+body{
+  margin:0;background:var(--tabstrip-bg);color:var(--text-normal);
+  font-family:var(--font-ui);font-size:var(--fs-ui-m);
+  -webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility;
+  overflow:hidden;overscroll-behavior:none;
+}
+::selection{background:var(--bg-selection)}
+button,input,textarea,select{font:inherit;color:inherit}
+/* The shell behaves like a desktop application, so its controls keep the arrow.
+   Only things that behave like hypertext in the document get the hand. */
+/* icon() emits a bare <svg>, which renders at 300x150 anywhere that forgets to
+   size it. :where() adds no specificity, so every rule below still wins. */
+:where(#app,.toast,.popover,.drag-ghost,.win-buttons,.composer) svg{width:15px;height:15px}
+button{background:none;border:0;padding:0;cursor:default}
+.wikilink,.tag-inline,.pill,.vnum,.tagcloud .pill{cursor:pointer}
+:focus-visible{outline:2px solid var(--accent-1);outline-offset:1px;border-radius:var(--radius-s)}
+:focus:not(:focus-visible){outline:none}
+
+/* scrollbars — Obsidian keeps them invisible until the region is hovered */
+.scroll{overflow:auto;scrollbar-width:thin;scrollbar-color:transparent transparent}
+.scroll:hover{scrollbar-color:var(--base-35) transparent}
+.scroll::-webkit-scrollbar{width:9px;height:9px}
+/* Nobody clicks the steppers; they only cost width and make the bar look old. */
+.scroll::-webkit-scrollbar-button{display:none;width:0;height:0}
+.scroll::-webkit-scrollbar-track,.scroll::-webkit-scrollbar-corner{background:transparent}
+.scroll::-webkit-scrollbar-thumb{background:transparent;border:2.5px solid transparent;background-clip:content-box;border-radius:8px}
+.scroll:hover::-webkit-scrollbar-thumb{background:var(--base-35);background-clip:content-box}
+.scroll::-webkit-scrollbar-thumb:hover{background:var(--base-40);background-clip:content-box}
+
+/* ============================================================================
+   APP FRAME
+   ========================================================================== */
+#app{display:flex;flex-direction:column;height:100dvh;width:100vw}
+
+/* No titlebar row. The top band is the tab strips themselves; on a frameless
+   window the whole band is the drag handle. */
+#app{padding-top:var(--mac-inset)}
+body[data-platform="darwin"]{--mac-inset:28px}
+body[data-platform="darwin"]::before{
+  content:"";position:fixed;top:0;left:0;right:0;height:28px;z-index:60;
+  background:var(--tabstrip-bg);border-bottom:1px solid var(--border);
+  -webkit-app-region:drag;app-region:drag;
+}
+.band-drag{-webkit-app-region:drag;app-region:drag}
+.band-drag button,.band-drag input,.band-drag .tabstrip,.band-drag .no-drag{
+  -webkit-app-region:no-drag;app-region:no-drag;
+}
+.app-pill{
+  display:flex;align-items:center;gap:7px;height:var(--tab-h);padding:0 9px 0 5px;
+  border-radius:var(--radius-m);color:var(--text-muted);font-size:var(--fs-ui-s);
+  font-weight:500;flex:0 0 auto;position:relative;
+}
+.app-pill:hover{color:var(--text-normal)}
+.app-mark{
+  width:18px;height:18px;border-radius:5px;display:grid;place-items:center;flex:0 0 auto;
+  background:linear-gradient(145deg,var(--accent-1),var(--accent));
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.28);
+}
+.app-mark svg{width:11px;height:11px;color:#fff}
+.rib-app{
+  width:var(--tab-h);height:var(--tab-h);display:grid;place-items:center;
+  border-radius:var(--radius-m);flex:0 0 auto;
+}
+.rib-app .app-mark{width:20px;height:20px;border-radius:6px}
+.rib-app .app-mark svg{width:12px;height:12px}
+.rib-app:hover .app-mark{box-shadow:inset 0 1px 0 rgba(255,255,255,.28),0 0 0 3px var(--accent-fade)}
+
+.win-ctl{display:flex;gap:2px;flex:0 0 auto}
+.win-ctl button{
+  width:30px;height:var(--tab-h);border-radius:var(--radius-m);
+  color:var(--text-faint);display:grid;place-items:center;position:relative;
+}
+.win-ctl button:hover{color:var(--text-normal)}
+.win-ctl button[aria-pressed="true"]{color:var(--accent-2)}
+.win-ctl svg{width:15px;height:15px}
+
+/* Window buttons belong to the window's corner, not to any one column, so they
+   float above the band and the strip underneath reserves room for them. */
+.win-buttons{
+  display:none;position:fixed;top:var(--mac-inset);inset-inline-end:0;height:var(--bar-h);z-index:48;
+  -webkit-app-region:no-drag;app-region:no-drag;
+}
+body[data-shell="on"] .win-buttons{display:flex}
+body[data-shell="on"][data-platform="darwin"] .win-buttons{display:none}
+body[data-shell="on"] .win-ctl button:nth-child(3){display:none}
+body[data-shell="on"][data-right="open"] .sidebar.right .pane-tabs{padding-inline-end:var(--wc-w)}
+body[data-shell="on"][data-right="shut"] .tabbar{padding-inline-end:var(--wc-w)}
+.win-buttons button{
+  width:46px;height:100%;display:grid;place-items:center;border-radius:0;
+  color:var(--text-muted);transition:background var(--speed),color var(--speed);
+}
+.win-buttons button:hover{background:var(--bg-hover);color:var(--text-normal)}
+.win-buttons button.close:hover{background:var(--win-close);color:#fff}
+.win-buttons svg{width:12px;height:12px}
+
+.body-row{flex:1;display:flex;min-height:0;padding-bottom:var(--gutter)}
+
+/* ---- ribbon --------------------------------------------------------------*/
+.ribbon{
+  width:var(--ribbon-w);flex:0 0 auto;background:transparent;
+  display:flex;flex-direction:column;align-items:stretch;
+}
+/* The menu button keeps the band slot; the rail below starts level with the
+   sheets, so all three columns share one top edge. */
+.rib-head{
+  height:var(--bar-h);flex:0 0 auto;display:flex;align-items:center;justify-content:center;
+}
+.rib-rail{
+  flex:1;min-height:0;display:flex;flex-direction:column;align-items:center;
+  padding:7px 0 8px;gap:2px;
+  background:var(--bg-secondary);
+  border-radius:0;border-start-end-radius:var(--radius-sheet);border-end-end-radius:var(--radius-sheet);
+}
+.rib{
+  width:30px;height:30px;border-radius:var(--radius-m);display:grid;place-items:center;
+  color:var(--text-faint);position:relative;transition:background var(--speed),color var(--speed);
+}
+.rib svg{width:17px;height:17px}
+.rib:hover{background:var(--bg-hover);color:var(--text-normal)}
+.rib.is-active{color:var(--accent-2);background:var(--accent-fade)}
+.rib-speech{position:relative}
+.rib-speech .ring{position:absolute;inset:0;width:100%;height:100%;transform:rotate(-90deg);pointer-events:none}
+.rib-speech .ring circle{fill:none;stroke-width:2.2}
+.rib-speech .ring-track{stroke:var(--border-strong);opacity:0;transition:opacity var(--speed)}
+.rib-speech .ring-fill{
+  stroke:currentColor;stroke-linecap:round;
+  stroke-dasharray:100.5;stroke-dashoffset:100.5;
+  transition:stroke-dashoffset .18s linear;
+}
+.rib-speech[data-mode="playing"],.rib-speech[data-mode="paused"]{color:var(--accent-2)}
+.rib-speech[data-mode="paused"]{color:var(--c-orange)}
+.rib-speech[data-mode="playing"] .ring-track,
+.rib-speech[data-mode="paused"] .ring-track{opacity:1}
+.rib-speech[data-mode="playing"] .glyph{animation:pulse 2.4s ease-in-out infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.62}}
+.rib[data-tip]::after{
+  content:attr(data-tip);position:absolute;inset-inline-start:calc(100% + 10px);top:50%;transform:translateY(-50%);
+  background:var(--bg-elevated);color:var(--text-normal);border:var(--divider);
+  padding:4px 8px;border-radius:var(--radius-m);font-size:var(--fs-ui-s);white-space:nowrap;
+  box-shadow:var(--shadow-m);opacity:0;pointer-events:none;transition:opacity var(--speed);z-index:60;
+}
+.rib:hover::after{opacity:1;transition-delay:.35s}
+
+/* ---- sidebars ------------------------------------------------------------*/
+.sidebar{
+  --radius-tab:5px;--radius-sheet:7px;--radius-flare:5px;
+  background:var(--tabstrip-bg);display:flex;flex-direction:column;min-height:0;position:relative;
+  flex:0 0 auto;
+}
+.sidebar.left{width:var(--sidebar-l)}
+.sidebar.right{width:var(--sidebar-r)}
+.sidebar[hidden]{display:none}
+/* No resting line anywhere. The handle announces itself by growing a short
+   rounded grip out of the gutter, which then runs the full height while held. */
+.resizer,.leaf-divider{
+  position:absolute;top:0;bottom:0;width:9px;cursor:col-resize;z-index:12;
+  background:transparent;
+}
+.resizer::after,.leaf-divider::after{
+  content:"";position:absolute;left:50%;top:50%;width:2px;height:28px;
+  transform:translate(-50%,-50%);border-radius:99px;background:var(--base-40);
+  opacity:0;pointer-events:none;transition:opacity .13s ease,background .13s ease;
+}
+.resizer:hover::after,.leaf-divider:hover::after{opacity:.8}
+.resizer.dragging::after,.leaf-divider.dragging::after{opacity:1;background:var(--base-50)}
+.sidebar.left .resizer{inset-inline-end:-4px}
+.sidebar.right .resizer{inset-inline-start:-4px}
+
+/* Chrome-style tabs: the active tab is filled with the panel colour below it
+   and cuts the strip's hairline, so tab and panel read as one surface. */
+.pane-tabs{
+  /* The first tab's flare has to land on the sheet's straight top edge, not on
+     its rounded corner, so the strip clears gutter + sheet radius + flare. */
+  --sheet-inset:0px;--sheet-inset-r:0px;
+  display:flex;gap:0;align-items:flex-end;height:var(--bar-h);
+  padding-block:0;
+  padding-inline:calc(var(--sheet-inset) + var(--radius-sheet) + var(--radius-flare))
+                 calc(var(--sheet-inset-r) + var(--radius-sheet) + var(--radius-flare));
+  flex:0 0 auto;position:relative;z-index:2;
+  background:var(--tabstrip-bg);--seam:var(--bg-secondary);
+}
+.pane-tab{
+  position:relative;flex:0 0 auto;width:36px;height:var(--tab-h);z-index:1;
+  border:0;border-radius:var(--radius-tab) var(--radius-tab) 0 0;
+  color:var(--text-faint);display:grid;place-items:center;
+  transition:background var(--speed),color var(--speed),transform .13s ease;
+  --tab-color:var(--accent);
+}
+.pane-tab[data-view="files"],.pane-tab[data-view="outline"]{--tab-color:var(--tab-purple)}
+.pane-tab[data-view="search"],.pane-tab[data-view="links"]{--tab-color:var(--tab-cyan)}
+.pane-tab[data-view="marks"],.pane-tab[data-view="notes"]{--tab-color:var(--tab-orange)}
+.pane-tab[data-view="tags"],.pane-tab[data-view="ai"]{--tab-color:var(--tab-green)}
+.pane-tab svg{width:16px;height:16px}
+/* The hover plate is a pseudo-element inset from the tab edges, so it reads as
+   a rounded chip with a gap and nothing moves when the pointer arrives. */
+.pane-tab:not(.is-active)::before,.tab:not(.is-active)::before{
+  content:"";position:absolute;inset:3px 2px 4px;z-index:-1;pointer-events:none;
+  border-radius:var(--radius-m);background:transparent;transition:background var(--speed);
+}
+.pane-tab:not(.is-active):hover::before,.tab:not(.is-active):hover::before{background:var(--bg-hover)}
+.pane-tab:not(.is-active):hover{color:var(--text-muted)}
+.tb-btn::before,.win-ctl button::before,.app-pill::before{
+  content:"";position:absolute;inset:3px 2px 4px;z-index:-1;pointer-events:none;
+  border-radius:var(--radius-m);background:transparent;transition:background var(--speed);
+}
+.tb-btn:hover::before,.win-ctl button:hover::before,
+.app-pill:hover::before{background:var(--bg-hover)}
+.tb-btn.is-on::before{background:var(--accent-fade)}
+/* The seam already says "active"; the marker only confirms it. Inset by the
+   corner radius so it reads as a mark rather than as a border, and mixed back
+   toward the tab fill so the accent in the text still outranks the chrome. */
+/* Nothing is outlined anywhere in the app, so the active tab is marked the way
+   the sheets are: by fill against the canvas, plus the flares that fuse it to
+   the page. --tab-color stays wired for the pane hues but is unused by default. */
+.pane-tab.is-active,.tab.is-active{
+  background:var(--seam);color:var(--text-normal);z-index:3;
+}
+/* The flare at each foot of the active tab: a quarter-circle carved out of a
+   square, so the tab's outline curves into the sheet instead of stopping. */
+.pane-tab.is-active::before,.pane-tab.is-active::after,
+.tab.is-active::before,.tab.is-active::after{
+  content:"";position:absolute;bottom:0;pointer-events:none;
+  width:var(--radius-flare);height:var(--radius-flare);
+}
+.pane-tab.is-active::before,.tab.is-active::before{
+  left:calc(-1 * var(--radius-flare));
+  background:radial-gradient(circle at 0 0,
+    transparent calc(var(--radius-flare) - .5px),
+    var(--seam) calc(var(--radius-flare) + .5px));
+}
+.pane-tab.is-active::after,.tab.is-active::after{
+  right:calc(-1 * var(--radius-flare));
+  background:radial-gradient(circle at 100% 0,
+    transparent calc(var(--radius-flare) - .5px),
+    var(--seam) calc(var(--radius-flare) + .5px));
+}
+/* Each pane is a sheet: bordered, rounded at the top, laid on the recessed
+   strip so the corners show the surface behind. */
+.pane-view.is-active{border-radius:var(--radius-sheet)}
+/* Every column is separated by canvas, the ribbon rail included. */
+.sidebar.left .pane-view.is-active{margin-inline-start:var(--gutter)}
+.sidebar.left .pane-tabs{--sheet-inset:var(--gutter)}
+
+.pane-view{background:var(--bg-secondary)}
+.pane-head{
+  display:flex;align-items:center;gap:6px;padding:10px 12px 6px;flex:0 0 auto;
+  font-size:11px;font-weight:600;letter-spacing:.02em;color:var(--text-faint);
+}
+.pane-head .ph-title{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pane-head button{
+  width:22px;height:22px;border-radius:var(--radius-s);display:grid;place-items:center;color:var(--text-faint);
+}
+.pane-head button:hover{background:var(--bg-hover);color:var(--text-normal)}
+.pane-head svg{width:14px;height:14px}
+.pane-body{flex:1;min-height:0;padding:0 6px 10px}
+
+/* ---- sidebar rows -------------------------------------------------------- */
+.side-body{flex:1;min-height:0;display:flex;flex-direction:column}
+.side-group{display:flex;flex-direction:column;min-height:0;flex:1 1 0%;position:relative}
+/* Only the topmost strip belongs to the band; lower ones are compact. */
+.side-group .pane-tabs{height:var(--tab-h)}
+.side-group:first-child .pane-tabs{height:var(--bar-h)}
+.pane-holder{display:none}
+.row-divider{flex:0 0 var(--gutter);position:relative;cursor:row-resize;z-index:6}
+.row-divider::before{
+  content:"";position:absolute;left:0;right:0;top:-3px;bottom:-3px;cursor:row-resize;
+}
+.row-divider::after{
+  content:"";position:absolute;left:50%;top:50%;width:28px;height:2px;
+  transform:translate(-50%,-50%);border-radius:99px;background:var(--base-40);
+  opacity:0;pointer-events:none;transition:opacity .13s ease,background .13s ease;
+}
+.row-divider:hover::after{opacity:.8}
+.row-divider.dragging::after{opacity:1;background:var(--base-50)}
+.pane-tab.is-ghost{opacity:.3}
+/* The region that will receive the drop, with the new row's edge drawn on the
+   side the row will appear. */
+.drop-hint{
+  position:absolute;z-index:30;pointer-events:none;border-radius:var(--radius-sheet);
+  background:var(--accent-fade);transition:top .09s ease,height .09s ease;
+}
+.drop-hint[hidden]{display:none}
+.drop-hint.above{box-shadow:inset 0 3px 0 var(--accent),inset 0 0 0 1px var(--accent-line)}
+.drop-hint.below{box-shadow:inset 0 -3px 0 var(--accent),inset 0 0 0 1px var(--accent-line)}
+/* Insertion point when dropping into a strip. */
+.drop-caret{
+  position:absolute;z-index:31;width:2px;border-radius:2px;background:var(--accent);
+  pointer-events:none;box-shadow:0 0 0 3px var(--accent-fade);
+  transition:left .09s ease,top .09s ease;
+}
+.drop-caret[hidden]{display:none}
+/* What the pointer carries while dragging. */
+.drag-ghost{
+  position:fixed;z-index:320;pointer-events:none;
+  display:flex;align-items:center;gap:7px;height:var(--tab-h);padding:0 12px;
+  border-radius:var(--radius-tab);background:var(--bg-elevated);color:var(--text-normal);
+  font-size:var(--fs-ui-s);font-weight:500;white-space:nowrap;
+  box-shadow:var(--shadow-l);transform:translate(-50%,-50%);opacity:.97;
+}
+.drag-ghost svg{width:15px;height:15px;color:var(--accent-2)}
+body.is-dragging-tab,body.is-dragging-tab *{cursor:grabbing!important}
+.pane-view{display:none;flex-direction:column;min-height:0;flex:1}
+.pane-view.is-active{display:flex}
+
+/* Content cut off by an edge fades into it. The lengths are set from script and
+   are zero unless there is actually something beyond that edge, so nothing is
+   dimmed and no space is reserved when the pane fits. */
+.fade-scroll{
+  --fade-top:0px;--fade-bottom:0px;
+  -webkit-mask-image:linear-gradient(to bottom,
+    transparent 0,#000 var(--fade-top),
+    #000 calc(100% - var(--fade-bottom)),transparent 100%);
+  mask-image:linear-gradient(to bottom,
+    transparent 0,#000 var(--fade-top),
+    #000 calc(100% - var(--fade-bottom)),transparent 100%);
+  transition:none;
+}
+
+/* ---- tree ----------------------------------------------------------------*/
+.tree{font-size:var(--fs-ui-m);padding-bottom:6px}
+.tree-item{border-radius:var(--radius-m)}
+.tree-row{
+  display:flex;align-items:center;gap:4px;padding:3px 6px;border-radius:var(--radius-m);
+  color:var(--text-muted);position:relative;line-height:1.5;
+}
+.tree-row:hover{color:var(--text-normal)}
+.tree-row:hover>.twisty{color:var(--text-muted)}
+.twisty{
+  width:16px;height:16px;flex:0 0 auto;display:grid;place-items:center;color:var(--text-faint);
+  transition:transform var(--speed);
+}
+.twisty svg{width:11px;height:11px}
+.tree-item.is-open>.tree-row>.twisty{transform:rotate(90deg)}
+.tree-label{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tree-aux{font-size:11px;color:var(--text-faint);font-variant-numeric:tabular-nums}
+.tree-children{
+  display:none;margin-inline-start:11px;padding-inline-start:5px;
+  border-inline-start:1px solid var(--border);transition:border-color var(--speed);
+}
+/* Where you are is traced by the branch line, not painted as a box. */
+.tree-item.is-current>.tree-children{border-inline-start-color:var(--accent-line)}
+.tree-item.is-current>.tree-row>.tree-label{color:var(--text-normal);font-weight:600}
+.tree-item.is-current>.tree-row>.tree-aux{color:var(--accent-2)}
+.tree-item.is-current>.tree-row>.twisty{color:var(--accent-2)}
+.tree-item.is-current.is-book>.tree-row::after{
+  content:"";position:absolute;inset-inline-start:-6px;top:6px;bottom:6px;width:2px;
+  border-radius:2px;background:var(--accent);
+}
+.tree-item.is-open>.tree-children{display:block}
+.tree-row:focus-visible,.ch-chip:focus-visible{outline:2px solid var(--accent);outline-offset:-2px}
+.tree-children.grid{
+  display:none;grid-template-columns:repeat(auto-fill,minmax(38px,1fr));gap:3px;padding:4px 0 6px 6px;
+}
+.tree-item.is-open>.tree-children.grid{display:grid}
+.ch-chip{
+  height:26px;border-radius:var(--radius-s);display:grid;place-items:center;
+  font-size:11px;font-variant-numeric:tabular-nums;color:var(--text-faint);
+  background:var(--base-10);transition:background var(--speed),color var(--speed);
+}
+.ch-chip:hover{background:var(--bg-active);color:var(--text-normal)}
+.ch-chip.has-text{color:var(--text-muted);box-shadow:inset 0 0 0 1px var(--border-strong)}
+.ch-chip.is-active{background:var(--accent);color:#fff;font-weight:600;box-shadow:none}
+/* A breadcrumb reveal points at the row it opened, then lets go. */
+@keyframes row-flash{0%,40%{background:var(--accent-fade)}100%{background:transparent}}
+.tree-row.is-flash{animation:row-flash 1.4s ease-out}
+/* Breadcrumb picker. The arrow points at the crumb that opened it, so it needs
+   no heading. The scrollbar is hidden; the fading edges say there is more. */
+.navpop{
+  position:fixed;z-index:250;background:var(--bg-elevated);color:var(--text-muted);
+  border:1px solid var(--border-strong);border-radius:var(--radius-l);box-shadow:var(--shadow-l);
+  --arrow-x:24px;
+}
+.navpop[hidden]{display:none}
+.navpop::before{
+  content:"";position:absolute;top:-7px;left:calc(var(--arrow-x) - 6px);width:12px;height:12px;
+  background:inherit;border:1px solid var(--border-strong);border-right:0;border-bottom:0;
+  border-top-left-radius:3px;transform:rotate(45deg);
+}
+.navpop.is-above::before{top:auto;bottom:-7px;transform:rotate(225deg)}
+.np-grid{
+  display:grid;gap:4px;padding:8px;overflow-y:auto;overflow-x:hidden;overscroll-behavior:contain;
+  scrollbar-width:none;border-radius:inherit;
+}
+.np-grid::-webkit-scrollbar{display:none}
+.np-grid .ch-chip{height:30px;min-width:0}
+.np-book{
+  display:flex;align-items:baseline;gap:7px;min-height:30px;padding-block:6px;padding-inline:4px 9px;
+  border-radius:var(--radius-s);text-align:start;font-size:var(--fs-ui-m);line-height:1.3;
+  color:var(--text-muted);transition:background var(--speed),color var(--speed);
+}
+/* The number is the bullet: a fixed column, so names line up whatever their
+   length. */
+.np-n{
+  flex:0 0 2.1em;text-align:end;font-size:11px;font-variant-numeric:tabular-nums;color:var(--text-faint);
+}
+.np-name{
+  min-width:0;overflow:hidden;overflow-wrap:anywhere;
+  display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;line-clamp:2;
+}
+.np-book.is-active .np-n{color:var(--accent-2)}
+.np-book:hover{background:var(--bg-hover);color:var(--text-normal)}
+.np-book.is-active{background:var(--accent-fade);color:var(--accent-2);font-weight:600}
+.navpop :is(.ch-chip,.np-book):focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+/* Touch: finger-sized cells, wider radius, the same arrow. */
+@media (hover:none),(max-width:760px){
+  .navpop{border-radius:var(--radius-xl)}
+  .np-grid{gap:6px;padding:10px}
+  .np-grid .ch-chip{height:44px;font-size:14px;border-radius:var(--radius-m)}
+  .np-book{height:44px;font-size:var(--fs-ui-l)}
+}
+
+/* ---- workspace -----------------------------------------------------------*/
+.workspace{flex:1;display:flex;flex-direction:column;min-width:0;min-height:0;background:var(--tabstrip-bg)}
+.tabbar{
+  height:var(--bar-h);flex:0 0 auto;display:flex;align-items:flex-end;gap:3px;
+  background:var(--tabstrip-bg);padding:0 8px;--seam:var(--bg-primary);
+}
+/* Tabs must sit on the bar's bottom edge to meet the sheet. Nothing else must,
+   and anchoring a bare icon there makes it read as having slipped down, so every
+   non-tab cluster centres in the bar instead. */
+.tabbar > .app-pill,
+.tabbar > .nav-group,
+.tabbar > .tb-actions,
+.tabbar > .win-ctl,
+.tabbar > .bar-sep{align-self:center}
+
+/* A hairline between clusters instead of one undifferentiated row. */
+.bar-sep{
+  flex:0 0 auto;width:1px;height:16px;margin:0 4px;background:var(--border);
+}
+.tabstrip{display:flex;gap:0;flex:1;min-width:0;align-items:flex-end}
+.tab{
+  position:relative;display:flex;align-items:center;gap:6px;height:var(--tab-h);
+  padding:0 6px 0 11px;z-index:1;min-width:0;flex:1 1 auto;max-width:190px;
+  border:0;border-radius:var(--radius-tab) var(--radius-tab) 0 0;
+  color:var(--text-faint);font-size:var(--fs-ui-s);white-space:nowrap;
+  transition:background var(--speed),color var(--speed),transform .16s ease;
+  --tab-color:var(--accent);
+}
+/* Dragging only moves the tab sideways, so it never leaves the band's bottom
+   edge. The lift is cast to the sides only; a downward shadow would darken the
+   exact line where the tab meets the sheet and break the join. */
+.tab.is-dragging{
+  z-index:9;transition:none;cursor:grabbing;
+  box-shadow:-7px 0 12px -9px rgba(0,0,0,.55),7px 0 12px -9px rgba(0,0,0,.55);
+}
+.tab:not(.is-active):hover{color:var(--text-muted)}
+.tab .t-name{flex:1 1 auto;min-width:0;text-align:start;overflow:hidden;text-overflow:ellipsis}
+.nav-group{display:flex;gap:2px;flex:0 0 auto}
+.tb-btn[disabled]{opacity:.32;pointer-events:none}
+.tb-btn[data-count]::after{
+  content:attr(data-count);position:absolute;inset-inline-end:0;bottom:1px;
+  min-width:11px;padding:0 2px;border-radius:4px;
+  font-size:9px;font-weight:700;line-height:11px;text-align:center;
+  color:var(--text-faint);background:var(--tabstrip-bg);
+}
+.tb-btn.flip svg{transform:rotate(180deg)}
+/* Direction in RTL: chevrons that mean "forward" or "open" point the other
+   way, and "previous" loses the flip it needs in LTR. */
+html[dir="rtl"] svg:has(> use[href="#i-chev"]){transform:scaleX(-1)}
+html[dir="rtl"] .tb-btn.flip svg,html[dir="rtl"] .mobile-bar .flip svg{transform:none}
+html[dir="rtl"] .tree-item.is-open>.tree-row>.twisty svg{transform:none}
+.tab .t-close{
+  width:16px;height:16px;border-radius:3px;display:grid;place-items:center;
+  opacity:0;flex:0 0 auto;margin-inline-start:auto;
+}
+.tab:hover .t-close,.tab.is-active .t-close{opacity:.65}
+.tab .t-close:hover{background:var(--bg-active);opacity:1}
+.tab svg{width:11px;height:11px}
+.tabbar .tb-actions{display:flex;gap:2px;flex:0 0 auto}
+.tb-btn{
+  width:30px;height:var(--tab-h);border-radius:var(--radius-m);
+  display:grid;place-items:center;color:var(--text-faint);position:relative;
+  transition:color var(--speed);
+}
+.tb-btn svg{width:15px;height:15px}
+.tb-btn:hover{color:var(--text-normal)}
+.tb-btn.is-on{color:var(--accent-2)}
+
+.panes{
+  flex:1;display:flex;min-height:0;min-width:0;background:var(--bg-primary);
+  margin:0 var(--gutter);
+  border-radius:var(--radius-sheet);overflow:hidden;position:relative;
+}
+.leaf-divider{flex:0 0 9px;position:relative;z-index:5}
+.leaf{
+  flex:1;min-width:0;min-height:0;display:flex;flex-direction:column;position:relative;
+}
+
+.leaf-head{
+  height:30px;flex:0 0 auto;display:flex;align-items:center;gap:8px;padding:0 10px 0 14px;
+  border-bottom:var(--divider);color:var(--text-faint);font-size:var(--fs-ui-s);
+}
+/* Breadcrumb: where the chapter sits, and a way to move from there. The
+   testament gives way first when the pane is narrow; the chapter never does. */
+.crumbs{flex:1;min-width:0;display:flex;align-items:center;gap:1px;overflow:hidden;white-space:nowrap}
+.crumb{
+  flex:0 0 auto;padding:2px 5px;border-radius:var(--radius-s);color:inherit;font:inherit;
+  transition:color var(--speed),background var(--speed);
+}
+.crumb:hover,.crumb:focus-visible{color:var(--text-normal);background:var(--bg-hover)}
+.crumb[data-crumb="testament"]{flex:0 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis}
+/* A long book name gives way before the chapter number does: it shrinks with
+   an ellipsis, then, in a narrow pane, becomes its short form. */
+.crumb[data-crumb="book"]{flex:0 1 auto;min-width:2.6em;overflow:hidden;text-overflow:ellipsis}
+.crumb .cb-short{display:none}
+@container leaf (max-width:300px){.crumb .cb-full{display:none}.crumb .cb-short{display:inline}}
+/* Narrower still, only the chapter number remains; the tab already names the
+   book. */
+@container leaf (max-width:220px){.crumb[data-crumb="book"],.crumb[data-crumb="book"]+.crumb-sep{display:none}}
+.crumb:focus-visible{outline:2px solid var(--accent);outline-offset:0}
+.crumb.is-current{color:var(--text-muted);font-weight:600;font-variant-numeric:tabular-nums}
+.crumb-sep{flex:0 0 auto;color:var(--base-40);padding:0 1px}
+@container leaf (max-width:340px){.crumb[data-crumb="testament"],.crumb[data-crumb="testament"]+.crumb-sep{display:none}}
+.leaf{container:leaf/inline-size}
+.tr-btn{
+  display:flex;align-items:center;gap:4px;background:var(--base-10);border:1px solid var(--border);
+  border-radius:var(--radius-s);padding:2px 7px;font-size:11px;font-weight:600;
+  letter-spacing:.02em;color:var(--text-muted);transition:background var(--speed),color var(--speed);
+}
+.dir-btn{
+  width:24px;height:22px;flex:0 0 auto;display:grid;place-items:center;border-radius:var(--radius-s);
+  color:var(--text-faint);transition:background var(--speed),color var(--speed);
+}
+.dir-btn:hover{background:var(--bg-hover);color:var(--text-normal)}
+.dir-btn[aria-pressed="true"]{color:var(--accent-2)}
+.dir-btn svg{width:14px;height:14px}
+.dir-btn[aria-pressed="true"] svg{transform:scaleX(-1)}
+/* A voice this device lacks: visibly quiet, still explains itself on hover. */
+.rib.is-unavailable{opacity:.38}
+.rib.is-unavailable:hover{opacity:.62}
+.tr-btn:hover{background:var(--bg-active);color:var(--text-normal);border-color:var(--border-strong)}
+.tr-btn svg{width:10px;height:10px;opacity:.6}
+.leaf-close{
+  width:20px;height:20px;border-radius:var(--radius-s);display:grid;place-items:center;color:var(--text-faint);
+}
+.leaf-close:hover{background:var(--bg-hover);color:var(--c-red)}
+.leaf-close svg{width:12px;height:12px}
+.swatch-dot{width:14px;height:14px;border-radius:50%;flex:0 0 auto;box-shadow:0 0 0 1px rgba(128,128,128,.35)}
+/* pan-y leaves horizontal gestures to the app; without it the browser claims
+   the swipe and fires pointercancel instead of pointerup. */
+.leaf-scroll{
+  flex:1;min-height:0;min-width:0;position:relative;
+  touch-action:pan-y;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;
+}
+.leaf.is-focused .leaf-head{color:var(--text-muted)}
+
+/* ---- reading surface -----------------------------------------------------*/
+.note{
+  --measure:calc(var(--fs-text) * var(--measure-em));
+  max-width:calc(var(--measure) + 88px);margin:0 auto;padding:34px 44px 48vh;position:relative;
+}
+body[data-measure="full"] .note{max-width:none}
+/* Chapter and study sections share a row: stacked by default, side by side
+   when the pane has room for a margin (fitLeaves decides). */
+.note.has-margin{max-width:calc(var(--measure) + 52px + 360px + 88px)}
+.note.has-margin .reading-row{
+  display:grid;grid-template-columns:minmax(0,var(--measure)) minmax(260px,360px);
+  column-gap:52px;align-items:start;
+}
+.note.has-margin .study-col{
+  position:sticky;top:18px;max-height:calc(var(--pane-h,100vh) - 36px);overflow:auto;
+  padding-inline-start:20px;border-inline-start:1px solid var(--border);
+  font-size:var(--fs-ui-m);scrollbar-width:none;
+}
+.note.has-margin .study-col::-webkit-scrollbar{display:none}
+.note.has-margin .study-col .md-h2{
+  font-family:var(--font-ui);font-size:11px;letter-spacing:.06em;text-transform:uppercase;
+  color:var(--text-faint);margin:0 0 6px;
+}
+.note.has-margin .study-col .md-h2~.md-h2{margin-top:22px}
+.note.has-margin .study-col>p{font-size:var(--fs-ui-m)!important;line-height:1.6!important}
+.note.has-margin .study-col .study-empty{margin-top:0}
+.note.wide{max-width:none}
+.inline-title{
+  font-family:var(--font-ui);font-size:30px;font-weight:700;letter-spacing:-.02em;
+  margin:0 0 2px;color:var(--text-normal);
+}
+.note-sub{color:var(--text-faint);font-size:var(--fs-ui-s);margin-bottom:16px}
+/* Chapter head: the number set large, as printed Bibles do, with the caption
+   beside it. The book and testament are already in the tab and breadcrumb. */
+.ch-head{display:flex;align-items:center;gap:16px;margin:0 0 14px}
+.ch-num{
+  font-family:var(--font-ui);font-size:52px;line-height:.9;font-weight:300;letter-spacing:-.04em;
+  color:var(--accent-2);font-variant-numeric:lining-nums tabular-nums;
+}
+.ch-meta{min-width:0;display:flex;flex-direction:column;gap:4px}
+.ch-caption{
+  font-family:var(--font-ui);font-size:19px;font-weight:600;letter-spacing:-.01em;
+  color:var(--text-normal);line-height:1.25;
+}
+.ch-head .note-sub{margin:0}
+/* In a parallel pane the caption is the translation's name: quieter, so the
+   eye goes to the text. */
+.note.is-compare .ch-caption{font-weight:500;color:var(--text-muted)}
+.tr-missing{margin:22px 0 0;font-size:var(--fs-ui-s);color:var(--text-faint)}
+/* A chapter nobody has written about yet: one quiet line and one way forward. */
+.study-empty{
+  display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:28px 0 0;padding:10px 12px;
+  border-radius:var(--radius-m,6px);background:var(--base-10);color:var(--text-faint);
+  font-family:var(--font-ui);font-size:var(--fs-ui-m);
+}
+.study-empty svg{width:15px;height:15px;flex:0 0 auto;opacity:.8}
+.study-empty span{flex:1;min-width:12em}
+.study-add{
+  color:var(--accent-2);font:inherit;font-weight:600;padding:3px 8px;border-radius:var(--radius-s);
+}
+.study-add:hover{background:var(--bg-hover)}
+
+.props{border-bottom:var(--divider);padding-bottom:10px;margin-bottom:22px}
+.props-head{
+  display:flex;align-items:center;gap:6px;color:var(--text-faint);font-size:var(--fs-ui-s);
+  padding:2px 0 6px;
+}
+.props-head svg{width:12px;height:12px;transition:transform var(--speed)}
+.props.is-collapsed .props-head svg{transform:rotate(-90deg)}
+.props.is-collapsed .props-list{display:none}
+.props-list{display:grid;grid-template-columns:minmax(88px,132px) 1fr;gap:1px 8px;align-items:start}
+.prop-k{
+  display:flex;align-items:center;gap:6px;color:var(--text-faint);font-size:var(--fs-ui-m);
+  padding:4px 6px;border-radius:var(--radius-s);
+}
+.prop-k svg{width:13px;height:13px;flex:0 0 auto}
+.prop-v{
+  padding:4px 6px;border-radius:var(--radius-s);color:var(--text-muted);font-size:var(--fs-ui-m);
+  min-height:26px;display:flex;flex-wrap:wrap;gap:5px;align-items:center;
+}
+.prop-v[contenteditable="true"]:hover{background:var(--bg-hover)}
+.prop-v[contenteditable="true"]:focus{background:var(--bg-hover);outline:1px solid var(--accent-line)}
+
+.pill{
+  display:inline-flex;align-items:center;gap:4px;padding:1px 8px;border-radius:999px;
+  font-size:11px;background:var(--accent-fade);color:var(--accent-2);
+  border:1px solid var(--accent-line);cursor:pointer;
+}
+.pill:hover{background:rgba(124,58,237,.24)}
+.pill.plain{background:var(--base-20);color:var(--text-muted);border-color:var(--border-strong)}
+
+/* verses */
+.chapter{font-family:var(--font-text);font-size:var(--fs-text);line-height:var(--lh-text);color:var(--text-normal)}
+.chapter.flow .verse{display:inline}
+/* List: the number is a bullet in its own column, sized to the widest number
+   in the chapter, and wrapped lines hang clear of it. */
+.chapter.list .verse{
+  display:grid;grid-template-columns:calc(var(--vnum-digits,2) * .62em + 1.1em) minmax(0,1fr);
+  column-gap:.55em;align-items:baseline;
+}
+.chapter.list .vnum{
+  vertical-align:baseline;justify-self:end;margin:0;font-size:.68em;line-height:1;
+  padding:.28em .42em;min-width:1.9em;text-align:center;color:var(--text-muted);background:var(--base-10);
+}
+.chapter.list .verse:hover .vnum{background:var(--accent-fade);color:var(--accent-2)}
+.chapter.list .verse.is-selected .vnum{background:var(--accent);color:#fff}
+/* Script typography: faces that carry the script, and the line height it
+   needs. Burmese stacks tall above and below the line; Arabic reads best a
+   little larger. */
+:is(.chapter,.pd-text):lang(my){
+  font-family:"Myanmar Text",var(--font-text);
+  line-height:2.05;
+}
+:is(.chapter,.pd-text):lang(ar){
+  font-family:"Noto Naskh Arabic","Amiri","Geeza Pro","Traditional Arabic",var(--font-text);
+  font-size:calc(var(--fs-text) * 1.12);line-height:1.9;
+}
+.pd-text:lang(ar){font-size:17px}
+.chapter.flow .verse+.verse{margin-inline-start:.25em}
+.verse{
+  display:block;margin:0 -10px;padding:5px 10px;border-radius:var(--radius-m);position:relative;
+  transition:background var(--speed);
+}
+.chapter:not(.flow) .verse:hover{background:var(--bg-hover)}
+.verse.is-marked{background:var(--mark-bg);box-shadow:inset 2px 0 0 var(--mark-line)}
+.verse.is-hit{background:rgba(124,58,237,.18)}
+.vnum{
+  font-family:var(--font-ui);font-size:11px;font-weight:600;color:var(--accent-2);
+  vertical-align:.38em;margin-inline-end:.4em;user-select:none;cursor:pointer;
+  font-variant-numeric:tabular-nums;
+}
+.chapter.flow .vnum{margin-inline-start:.15em}
+/* The verse number is the handle for the verse bar: quiet while reading, a
+   soft pill under the pointer, filled while its bar is open. */
+.vnum{border-radius:4px;padding:1px 3px;margin-inline-start:-3px;transition:background var(--speed),color var(--speed)}
+.verse:hover .vnum,.vnum:focus-visible{background:var(--accent-fade)}
+.vnum:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+.verse.is-selected{background:var(--bg-hover)}
+.verse.is-selected .vnum{background:var(--accent);color:#fff}
+/* The same verse in the other panes, while one is pointed at. */
+.chapter:not(.flow) .verse.is-twin{background:var(--accent-fade)}
+.vbar{display:flex;gap:2px;padding:4px;border-radius:var(--radius-m)}
+/* ---- reading panel ---- */
+.rpanel{width:min(360px,calc(100vw - 16px));padding:12px 14px 10px;display:flex;flex-direction:column;gap:12px}
+.rpanel.no-arrow::before{display:none}
+.rpanel:focus{outline:none}
+body.study-in-margin .outline-study{display:none}
+.rp-row{display:flex;flex-direction:column;gap:6px}
+.rp-l{font-size:11px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;color:var(--text-faint)}
+.rp-ctl{display:flex;align-items:center;gap:8px}
+.rp-ctl input[type=range]{flex:1;min-width:0;accent-color:var(--accent)}
+.rp-step{width:30px;height:28px;border-radius:var(--radius-s);display:grid;place-items:center;color:var(--text-muted);background:var(--base-10)}
+.rp-step:hover{background:var(--bg-hover);color:var(--text-normal)}
+.rp-a{font-family:var(--font-text);font-size:17px;line-height:1}
+.rp-a.small{font-size:12px}
+.rp-glyph{width:30px;display:grid;place-items:center;color:var(--text-faint)}
+.rp-glyph svg{width:16px;height:16px}
+.rp-num{display:flex;align-items:center;gap:3px;background:var(--base-10);border:1px solid var(--border);border-radius:var(--radius-s);padding-block:0;padding-inline:2px 6px}
+.rp-num input{width:44px;background:none;border:0;color:var(--text-normal);font:inherit;font-size:var(--fs-ui-m);text-align:end;padding:4px 0;font-variant-numeric:tabular-nums;-moz-appearance:textfield}
+.rp-num input::-webkit-inner-spin-button{display:none}
+.rp-num i{font-style:normal;font-size:11px;color:var(--text-faint)}
+.rp-seg{display:flex;background:var(--base-10);border-radius:var(--radius-m);padding:2px;gap:2px}
+.rp-seg button{flex:1;padding:5px 6px;border-radius:var(--radius-s);font-size:var(--fs-ui-s);color:var(--text-muted)}
+.rp-seg button:hover{color:var(--text-normal)}
+.rp-seg button[aria-pressed="true"]{background:var(--bg-elevated);color:var(--text-normal);box-shadow:0 0 0 1px var(--border-strong)}
+.rp-foot{display:flex;align-items:center;justify-content:space-between;gap:8px;font-size:11px;color:var(--text-faint);border-top:1px solid var(--border);padding-top:9px}
+.rp-reset{font-size:var(--fs-ui-s);color:var(--accent-2);padding:3px 8px;border-radius:var(--radius-s)}
+.rp-reset:hover{background:var(--bg-hover)}
+.vbar button{width:32px;height:30px;border-radius:var(--radius-s);display:grid;place-items:center;color:var(--text-muted)}
+.vbar button:hover{background:var(--bg-hover);color:var(--text-normal)}
+.vbar button[aria-pressed="true"]{color:var(--accent-2)}
+.vbar button:focus-visible{outline:2px solid var(--accent);outline-offset:-2px}
+.vbar svg{width:15px;height:15px}
+.vbar::before{width:10px;height:10px;left:calc(var(--arrow-x) - 5px);top:-6px}
+.vbar.is-above::before{top:auto;bottom:-6px}
+
+/* inline markdown */
+.wikilink{color:var(--accent-2);text-decoration:none;cursor:pointer;border-bottom:1px solid transparent}
+.wikilink:hover{border-bottom-color:var(--accent-line)}
+.wikilink.is-unresolved{color:var(--base-50);font-style:italic}
+.strongs{
+  color:inherit;border-bottom:1px dotted var(--c-orange);cursor:help;position:relative;
+}
+.strongs.is-hidden-code{border-bottom-color:transparent}
+.tag-inline{
+  font-family:var(--font-ui);font-size:.76em;padding:1px 7px;border-radius:999px;
+  background:var(--accent-fade);color:var(--accent-2);text-decoration:none;vertical-align:.1em;
+}
+.md-h2{font-family:var(--font-ui);font-size:1.1em;font-weight:650;color:var(--text-normal);margin:26px 0 8px}
+.md-quote{border-inline-start:3px solid var(--accent-line);margin:14px 0;padding-block:2px;padding-inline:14px 0;color:var(--text-muted)}
+.md-em{font-style:italic;color:var(--base-80)}
+.md-strong{font-weight:650}
+.callout{
+  border:var(--divider);border-inline-start:3px solid var(--accent);border-radius:var(--radius-m);
+  background:var(--accent-fade);padding:10px 14px;margin:18px 0;font-family:var(--font-ui);
+  font-size:var(--fs-ui-l);line-height:1.55;color:var(--text-muted);
+}
+.callout .co-title{display:flex;align-items:center;gap:7px;color:var(--accent-2);font-weight:600;margin-bottom:4px}
+.callout svg{width:15px;height:15px}
+
+/* ---- learning pages ------------------------------------------------------ */
+.note.doc{
+  font-family:var(--font-ui);font-size:var(--fs-ui-l);line-height:1.65;
+  color:var(--text-muted);max-width:52rem;
+}
+.doc-lede{font-size:16px;line-height:1.6;color:var(--text-normal);margin:0 0 24px}
+.doc-h{
+  font-size:11px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;
+  color:var(--text-faint);margin:30px 0 10px;
+}
+.doc-p{margin:0 0 12px}
+.doc-p:last-child{margin-bottom:0}
+.task-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(215px,1fr));gap:8px}
+.task{
+  background:var(--surface-raised);border:var(--divider);border-radius:var(--radius-m);
+  padding:11px 12px;display:flex;flex-direction:column;gap:6px;align-items:flex-start;
+  text-align:start;transition:background var(--speed),border-color var(--speed);
+}
+.task-t{display:flex;align-items:center;gap:7px;color:var(--text-normal);font-weight:600;font-size:var(--fs-ui-m)}
+.task-t svg{width:15px;height:15px;color:var(--accent-2);flex:0 0 auto}
+.task span.d{font-size:var(--fs-ui-m);color:var(--text-faint);line-height:1.5}
+.task[data-go]:hover{background:var(--bg-active);border-color:var(--accent-line)}
+.key-list{display:flex;flex-direction:column;margin-top:2px}
+.key-row{display:flex;align-items:center;gap:14px;padding:7px 2px;border-bottom:1px solid var(--border)}
+.key-row:last-child{border-bottom:0}
+.key-row .k{flex:0 0 130px;display:flex;gap:4px;flex-wrap:wrap}
+.key-row .a{flex:1;color:var(--text-muted);font-size:var(--fs-ui-m)}
+.key-empty{padding:14px 2px;color:var(--text-faint)}
+.test-row{
+  display:flex;align-items:flex-start;gap:12px;padding:8px 2px;
+  border-bottom:1px solid var(--border);font-size:var(--fs-ui-m);
+}
+.test-row:last-child{border-bottom:0}
+.test-row .mark{
+  flex:0 0 auto;width:18px;height:18px;border-radius:99px;display:grid;place-items:center;
+  font-size:11px;font-weight:700;
+}
+.test-row.pass .mark{background:rgba(68,207,110,.16);color:var(--c-green)}
+.test-row.fail .mark{background:rgba(251,70,76,.16);color:var(--c-red)}
+.test-row .what{flex:1;color:var(--text-normal)}
+.test-row .why{display:block;color:var(--text-faint);font-size:11px;margin-top:2px}
+.test-sum{
+  display:flex;gap:14px;align-items:center;padding:10px 12px;border-radius:var(--radius-m);
+  background:var(--surface-raised);border:var(--divider);margin:14px 0 6px;font-size:var(--fs-ui-m);
+}
+.test-sum b{font-size:18px}
+.test-sum.ok b{color:var(--c-green)}
+.test-sum.bad b{color:var(--c-red)}
+.fact-list{display:grid;grid-template-columns:minmax(120px,180px) 1fr;gap:1px 16px}
+.fact-list dt{color:var(--text-faint);padding:6px 0;font-size:var(--fs-ui-m)}
+.fact-list dd{margin:0;padding:6px 0;color:var(--text-normal);font-size:var(--fs-ui-m);border-bottom:1px solid var(--border)}
+.fact-list dd:last-of-type{border-bottom:0}
+.doc-filter{max-width:320px;margin:0 0 6px}
+
+/* source mode */
+.source{
+  width:100%;height:100%;border:0;resize:none;background:transparent;padding:34px 44px 40vh;
+  font-family:var(--font-mono);font-size:14px;line-height:1.72;color:var(--base-80);
+  tab-size:2;
+}
+.source:focus{outline:none}
+.source::selection{background:var(--bg-selection)}
+
+/* empty + error states */
+.state{
+  height:100%;display:grid;place-content:center;justify-items:center;gap:10px;padding:40px;text-align:center;
+}
+.state svg{width:30px;height:30px;color:var(--base-40)}
+.state h3{margin:0;font-size:15px;font-weight:600;color:var(--text-muted)}
+.state p{margin:0;max-width:34ch;color:var(--text-faint);font-size:var(--fs-ui-m);line-height:1.6}
+.state .btn{margin-top:6px}
+.state.error svg{color:var(--c-orange)}
+.state.error h3{color:var(--c-orange)}
+
+.btn{
+  display:inline-flex;align-items:center;gap:6px;height:28px;padding:0 12px;border-radius:var(--radius-m);
+  background:var(--base-20);color:var(--text-normal);font-size:var(--fs-ui-m);
+  box-shadow:inset 0 0 0 1px var(--border-strong);transition:background var(--speed);
+}
+.btn:hover{background:var(--base-30)}
+.btn.primary{background:var(--accent);box-shadow:none;color:#fff;font-weight:500}
+.btn.primary:hover{background:var(--accent-1)}
+.btn svg{width:14px;height:14px}
+
+/* ---- search / backlinks / tags -------------------------------------------*/
+.field{
+  display:flex;align-items:center;gap:7px;background:var(--base-10);border:var(--divider);
+  border-radius:var(--radius-m);padding:0 9px;height:30px;margin:0 6px 8px;
+}
+.field:focus-within{border-color:var(--accent-line);background:var(--base-00)}
+.field svg{width:14px;height:14px;color:var(--text-faint);flex:0 0 auto}
+.field input{flex:1;background:none;border:0;outline:none;font-size:var(--fs-ui-m);min-width:0}
+.field input::placeholder{color:var(--text-faint)}
+
+.result-group{margin-bottom:4px}
+.result-head{
+  display:flex;align-items:center;gap:6px;padding:5px 7px;border-radius:var(--radius-m);
+  color:var(--text-muted);font-size:var(--fs-ui-m);
+}
+.result-head:hover{background:var(--bg-hover)}
+.result-head svg{width:14px;height:14px;flex:0 0 auto}
+.result-head .rh-count{
+  margin-inline-start:auto;font-size:10px;background:var(--base-20);color:var(--text-faint);
+  padding:1px 6px;border-radius:999px;font-variant-numeric:tabular-nums;
+}
+.result-line{
+  padding:5px 9px 5px 20px;border-radius:var(--radius-m);color:var(--text-faint);
+  font-size:var(--fs-ui-s);line-height:1.5;
+  display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;
+}
+.result-line:hover{background:var(--bg-hover);color:var(--text-muted)}
+.result-line mark{background:rgba(124,58,237,.32);color:var(--text-normal);border-radius:2px;padding:0 1px}
+.empty-hint{padding:14px 10px;color:var(--text-faint);font-size:var(--fs-ui-s);line-height:1.6}
+
+.tagcloud{display:flex;flex-wrap:wrap;gap:5px;padding:2px 6px 10px}
+.tagcloud .pill{cursor:pointer}
+.tagcloud .pill .n{color:var(--text-faint);font-variant-numeric:tabular-nums}
+
+/* ---- modal ---------------------------------------------------------------*/
+.scrim{
+  position:fixed;inset:0;background:rgba(0,0,0,.45);backdrop-filter:blur(1.5px);z-index:200;
+  display:grid;place-items:start center;padding-top:12vh;
+}
+.scrim[hidden]{display:none}
+.modal{
+  width:min(640px,92vw);background:var(--bg-elevated);border:1px solid var(--border-strong);
+  border-radius:var(--radius-xl);box-shadow:var(--shadow-l);overflow:hidden;
+  animation:pop .16s cubic-bezier(.2,.9,.3,1);
+}
+@keyframes pop{from{opacity:0;transform:translateY(-6px) scale(.985)}to{opacity:1;transform:none}}
+.modal-input{
+  width:100%;height:48px;padding:0 18px;background:none;border:0;border-bottom:var(--divider);
+  font-size:16px;outline:none;
+}
+.modal-input::placeholder{color:var(--text-faint)}
+.modal-list{max-height:min(46vh,420px);overflow:auto;padding:6px}
+.mi{
+  display:flex;align-items:center;gap:10px;padding:8px 12px;border-radius:var(--radius-m);
+  color:var(--text-muted);
+}
+.mi.is-sel{background:var(--accent-fade);color:var(--text-normal)}
+.mi svg{width:15px;height:15px;color:var(--text-faint);flex:0 0 auto}
+.mi.is-sel svg{color:var(--accent-2)}
+.mi .mi-main{flex:1;min-width:0}
+.mi .mi-t{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.mi .mi-s{font-size:11px;color:var(--text-faint);margin-top:1px}
+.mi kbd,.kbd{
+  font-family:var(--font-ui);font-size:10px;padding:2px 5px;border-radius:4px;
+  background:var(--base-30);color:var(--text-faint);box-shadow:inset 0 -1px 0 rgba(0,0,0,.35);
+}
+.modal-foot{
+  display:flex;gap:12px;align-items:center;padding:7px 14px;border-top:var(--divider);
+  color:var(--text-faint);font-size:11px;background:var(--base-10);
+}
+.modal-foot span{display:flex;align-items:center;gap:4px}
+
+/* ---- status bar ----------------------------------------------------------*/
+body[data-ribbon="off"] .ribbon{width:0;flex:0 0 0;overflow:visible}
+body[data-ribbon="off"] .rib-rail{display:none}
+body[data-ribbon="off"] .rib-head{
+  position:fixed;inset-inline-start:0;top:var(--mac-inset);width:var(--ribbon-w);z-index:46;
+}
+body[data-ribbon="off"][data-left="open"] .sidebar.left .pane-tabs{padding-inline-start:var(--ribbon-w)}
+body[data-ribbon="off"][data-left="shut"] .tabbar{padding-inline-start:var(--ribbon-w)}
+body[data-status="off"]{--statusbar-h:0px}
+body[data-status="off"] .statusbar{display:none}
+.statusbar{
+  height:var(--statusbar-h);flex:0 0 auto;display:flex;align-items:center;gap:14px;
+  padding:0 12px;background:var(--tabstrip-bg);
+  color:var(--text-faint);font-size:11px;
+}
+.statusbar .sb{display:flex;align-items:center;gap:5px;cursor:default}
+.statusbar button.sb{border-radius:var(--radius-s);padding:1px 5px}
+.statusbar button.sb:hover{background:var(--bg-hover);color:var(--text-muted)}
+.statusbar svg{width:12px;height:12px}
+.statusbar .spacer{flex:1}
+.dot{width:6px;height:6px;border-radius:50%;background:var(--c-green)}
+.dot.warn{background:var(--c-orange)}
+.dot.off{background:var(--base-40)}
+
+/* ---- overlays: graph / canvas / ink --------------------------------------*/
+.overlay-view{position:absolute;inset:0;background:var(--bg-primary);display:flex;flex-direction:column}
+/* icon() emits a bare <svg>; every strip has to size it or it renders at the
+   SVG default of 300x150. */
+.ov-bar{
+  height:34px;flex:0 0 auto;display:flex;align-items:center;gap:7px;padding:0 8px 0 12px;
+  color:var(--text-muted);font-size:var(--fs-ui-s);
+}
+.ov-bar svg{width:15px;height:15px;flex:0 0 auto}
+.ov-title{display:flex;align-items:center;gap:7px;font-weight:600;color:var(--text-normal);flex:0 0 auto}
+.ov-hint{color:var(--text-faint);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ov-bar .spacer{flex:1;min-width:8px}
+.ov-sep{width:1px;height:14px;background:var(--border);flex:0 0 auto;margin:0 2px}
+.ov-act{
+  display:flex;align-items:center;gap:6px;height:24px;padding:0 9px;flex:0 0 auto;
+  border-radius:var(--radius-m);color:var(--text-muted);
+  transition:background var(--speed),color var(--speed);
+}
+.ov-act:hover{background:var(--bg-hover);color:var(--text-normal)}
+.ov-act[disabled]{opacity:.35;pointer-events:none}
+.ov-bar label{display:flex;align-items:center;gap:6px;color:var(--text-faint);flex:0 0 auto}
+.ov-bar input[type=range]{
+  width:76px;accent-color:var(--accent);height:3px;background:var(--base-25);
+  border-radius:99px;appearance:none;
+}
+.ov-bar input[type=range]::-webkit-slider-thumb{
+  appearance:none;width:11px;height:11px;border-radius:50%;background:var(--accent-2);
+  border:0;cursor:default;
+}
+.ov-count{
+  font-size:10px;font-variant-numeric:tabular-nums;color:var(--text-faint);
+  background:var(--base-20);border-radius:99px;padding:1px 7px;flex:0 0 auto;
+}
+canvas.graph,canvas.board{flex:1;display:block;width:100%;min-height:0;touch-action:none}
+.ink-layer{position:absolute;inset:0;z-index:6;touch-action:none}
+.ink-layer.is-off{pointer-events:none}
+.ink-bar{
+  position:absolute;inset-inline-end:16px;bottom:16px;z-index:8;display:flex;gap:3px;padding:4px;
+  background:var(--bg-elevated);border:1px solid var(--border-strong);border-radius:var(--radius-l);
+  box-shadow:var(--shadow-m);
+}
+.ink-bar button{width:28px;height:28px;border-radius:var(--radius-m);display:grid;place-items:center;color:var(--text-faint)}
+.ink-bar button:hover{background:var(--bg-hover);color:var(--text-normal)}
+.ink-bar button.is-on{background:var(--accent-fade);color:var(--accent-2)}
+.ink-bar svg{width:15px;height:15px}
+.swatch{width:16px;height:16px;border-radius:50%;box-shadow:0 0 0 1px rgba(255,255,255,.18)}
+
+/* ---- right-side utility panels -------------------------------------------*/
+.stack{display:flex;flex-direction:column;gap:8px;padding:0 6px}
+.card{
+  background:var(--surface-raised);border:var(--divider);border-radius:var(--radius-m);padding:10px 11px;
+  font-size:var(--fs-ui-m);color:var(--text-muted);line-height:1.55;
+}
+.card h4{margin:0 0 6px;font-size:var(--fs-ui-m);font-weight:600;color:var(--text-normal)}
+/* ---- reading plan pane ---------------------------------------------------*/
+.plan-label{font-size:11px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;color:var(--text-faint);margin:2px 0 6px}
+.plan-label.plan-gap{margin:10px 4px 2px}
+.plan-label.is-behind{color:var(--c-orange,#e9973f);margin-top:12px}
+.pd-text{margin:0 0 8px;font-family:var(--font-text);font-size:15px;line-height:1.55;color:var(--text-normal)}
+.pd-ref{display:inline-flex;align-items:center;gap:4px;color:var(--accent-2);font-weight:600;font-size:var(--fs-ui-m);padding:2px 0}
+.pd-ref svg{width:11px;height:11px}
+.plan-continue{
+  display:flex;align-items:center;gap:8px;width:100%;padding:9px 11px;border-radius:var(--radius-m);
+  background:var(--accent-fade);color:var(--text-muted);font-size:var(--fs-ui-m);text-align:start;
+}
+.plan-continue svg{width:15px;height:15px;color:var(--accent-2);flex:0 0 auto}
+.plan-continue span{flex:1;min-width:0}
+.plan-continue b{color:var(--text-normal);font-weight:600;white-space:nowrap}
+.plan-pick{
+  display:flex;flex-direction:column;align-items:flex-start;gap:1px;width:100%;padding:9px 11px;
+  border-radius:var(--radius-m);background:var(--surface-raised);border:var(--divider);text-align:start;
+  transition:border-color var(--speed);
+}
+.plan-pick:hover{border-color:var(--accent-line)}
+.plan-pick b{color:var(--text-normal);font-size:var(--fs-ui-m);font-weight:600}
+.plan-pick span{color:var(--text-faint);font-size:var(--fs-ui-s)}
+.plan-top{display:flex;align-items:baseline;gap:8px;margin-bottom:8px}
+.plan-top b{flex:1;min-width:0;color:var(--text-normal);font-weight:600}
+.plan-top span{color:var(--text-faint);font-size:var(--fs-ui-s);white-space:nowrap}
+.plan-bar{height:6px;border-radius:6px;background:var(--bg-active);box-shadow:inset 0 0 0 1px var(--border);overflow:hidden}
+.plan-bar i{display:block;height:100%;background:var(--accent);border-radius:inherit;min-width:2px}
+.plan-meta{font-size:var(--fs-ui-s);color:var(--text-faint);margin:6px 0 10px}
+.plan-chips{display:flex;flex-wrap:wrap;gap:5px}
+.plan-ch{display:inline-flex;align-items:center;border-radius:var(--radius-s);background:var(--base-10);box-shadow:inset 0 0 0 1px var(--border)}
+.plan-ch.is-open{box-shadow:inset 0 0 0 1px var(--accent-line)}
+.pc-open{padding-block:4px;padding-inline:9px 4px;color:var(--text-muted);font-size:var(--fs-ui-m)}
+.pc-open:hover{color:var(--text-normal)}
+.pc-tick{width:24px;height:26px;display:grid;place-items:center;color:var(--base-40);border-radius:var(--radius-s)}
+.pc-tick svg{width:13px;height:13px}
+.pc-tick:hover{color:var(--text-muted)}
+.plan-ch.is-read{background:var(--accent-fade);box-shadow:none}
+.plan-ch.is-read .pc-open{color:var(--text-faint);text-decoration:line-through;text-decoration-color:var(--base-40)}
+.plan-ch.is-read .pc-tick{color:var(--accent-2)}
+.plan-note{margin:8px 0 0;font-size:var(--fs-ui-s);color:var(--text-faint)}
+.plan-stop{margin-top:12px;font-size:var(--fs-ui-s);color:var(--text-faint);padding:2px 0}
+.plan-stop:hover{color:var(--c-red,#fb464c)}
+.note-editor{
+  width:100%;min-height:120px;background:var(--surface-raised);border:var(--divider);border-radius:var(--radius-m);
+  padding:9px 10px;font-family:var(--font-ui);font-size:var(--fs-ui-m);line-height:1.6;resize:vertical;
+  outline:none;color:var(--text-normal);
+}
+.note-editor:focus{border-color:var(--accent-line)}
+.chat{
+  display:flex;flex-direction:column;gap:9px;padding:10px;margin:0 6px 8px;
+  background:var(--surface-raised);border:var(--divider);border-radius:var(--radius-m);
+}
+.msg{border-radius:var(--radius-m);padding:9px 11px;font-size:var(--fs-ui-m);line-height:1.6}
+.msg.user{background:var(--accent-fade);color:var(--text-normal);border:1px solid var(--accent-line)}
+.msg.ai{background:transparent;box-shadow:inset 0 0 0 1px var(--border);color:var(--text-muted)}
+.msg .who{font-size:10px;color:var(--text-faint);margin-bottom:4px}
+.ask{display:flex;gap:6px;padding:0 6px 10px;align-items:flex-end;flex:0 0 auto}
+.ask textarea{
+  flex:1;min-width:0;height:34px;min-height:34px;max-height:120px;
+  background:var(--surface-raised);border:var(--divider);border-radius:var(--radius-m);
+  padding:7px 9px;font-size:var(--fs-ui-m);line-height:1.4;resize:none;outline:none;
+}
+#askSend{width:34px;height:34px;padding:0;flex:0 0 auto;border-radius:var(--radius-m)}
+.ask textarea:focus{border-color:var(--accent-line)}
+
+/* ---- floating windows -----------------------------------------------------
+   A float is a frame around the same .leaf the workspace builds, so there is one
+   content renderer and one stacking order shared with the composer. */
+.float-win{
+  position:fixed;z-index:120;display:flex;flex-direction:column;
+  min-width:340px;min-height:220px;
+  background:var(--bg-primary);border:1px solid var(--border-strong);
+  border-radius:var(--radius-l);box-shadow:var(--shadow-m);overflow:hidden;
+}
+.float-win.is-front{box-shadow:var(--shadow-l);border-color:var(--base-40)}
+.float-win.is-max{border-radius:var(--radius-l)}
+.float-bar{
+  height:34px;flex:0 0 auto;display:flex;align-items:center;gap:6px;padding:0 6px 0 12px;
+  background:var(--tabstrip-bg);cursor:grab;user-select:none;
+}
+.float-bar.is-dragging{cursor:grabbing}
+.float-win svg{width:14px;height:14px;flex:0 0 auto}
+.float-name{
+  flex:1;min-width:0;display:flex;align-items:center;gap:7px;
+  font-size:var(--fs-ui-s);font-weight:600;color:var(--text-muted);
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+}
+.float-body{flex:1;min-height:0;min-width:0;display:flex}
+.float-body .leaf{flex:1;min-width:0;min-height:0}
+.float-win .cw-resize[data-dir="e"]{top:34px}
+/* Where a detached tab will land, and where a docked one came from. */
+.win-hint{
+  position:fixed;z-index:205;pointer-events:none;
+  background:var(--accent-fade);box-shadow:inset 0 0 0 2px var(--accent-line);
+  border-radius:var(--radius-l);transition:all .09s ease;
+}
+.win-hint.tab{border-radius:var(--radius-tab) var(--radius-tab) 0 0}
+.win-hint[hidden]{display:none}
+.tab.is-detaching{opacity:.35}
+
+/* ---- composer window ------------------------------------------------------*/
+/* Layering, low to high: page, composer, popups, popover, toasts. A popup must
+   sit above the composer so the overflow menu can be a modal. */
+.composer{
+  position:fixed;z-index:120;display:flex;flex-direction:column;min-width:340px;min-height:240px;
+  background:var(--bg-elevated);border:1px solid var(--border-strong);border-radius:var(--radius-l);
+  box-shadow:var(--shadow-l);overflow:hidden;
+}
+.composer[hidden]{display:none}
+.composer[data-max="1"]{
+  left:var(--gutter)!important;top:calc(var(--mac-inset) + var(--gutter))!important;
+  width:calc(100vw - var(--gutter) * 2)!important;
+  height:calc(100dvh - var(--statusbar-h) - var(--mac-inset) - var(--gutter) * 2)!important;
+}
+.cw-bar{
+  height:35px;flex:0 0 auto;display:flex;align-items:center;gap:6px;padding:0 6px 0 10px;
+  background:var(--tabstrip-bg);cursor:grab;user-select:none;
+}
+.composer svg{width:14px;height:14px;flex:0 0 auto}
+.cw-mark{display:grid;place-items:center;color:var(--text-faint);flex:0 0 auto}
+.cw-chip{
+  flex:0 0 auto;font-size:10px;padding:1px 7px;border-radius:99px;
+  background:var(--accent-fade);color:var(--accent-2);border:1px solid var(--accent-line);
+}
+.cw-chip[hidden]{display:none}
+.cw-bar.is-dragging{cursor:grabbing}
+
+.cw-seg{display:flex;gap:1px;background:var(--base-20);border-radius:var(--radius-m);padding:2px}
+.cw-seg button{
+  width:26px;height:20px;border-radius:4px;display:grid;place-items:center;color:var(--text-faint);
+}
+.cw-seg button:hover{color:var(--text-normal)}
+.cw-seg button.is-on{background:var(--surface-raised);color:var(--text-normal);box-shadow:var(--shadow-s)}
+.cw-tool{
+  width:26px;height:24px;border-radius:var(--radius-s);display:grid;place-items:center;color:var(--text-faint);
+}
+.cw-tool:hover{background:var(--bg-hover);color:var(--text-normal)}
+.cw-title{
+  flex:1;min-width:0;background:none;border:0;outline:none;cursor:inherit;
+  font-size:var(--fs-ui-l);font-weight:600;color:var(--text-normal);
+  padding:2px 4px;border-radius:var(--radius-s);
+}
+.cw-title:hover{background:var(--bg-hover)}
+.cw-title:focus{background:var(--bg-hover);outline:1px solid var(--accent-line);cursor:text}
+.cw-title::placeholder{color:var(--text-faint)}
+.cw-body{flex:1;min-height:0;display:flex;gap:0;background:var(--bg-elevated);position:relative}
+.cw-write{flex:1;min-width:0;background:var(--bg-elevated);overflow:hidden}
+.cw-preview{flex:1;min-width:0;background:var(--bg-elevated)}
+/* The seam draws its own single hairline; a flex gap over a coloured body
+   would draw one on each side of it. */
+.cw-split{
+  flex:0 0 7px;position:relative;cursor:col-resize;z-index:2;
+  background-color:var(--bg-elevated);
+  background-image:linear-gradient(var(--border),var(--border));
+  background-size:1px 100%;background-position:center;background-repeat:no-repeat;
+}
+.cw-split::after{
+  content:"";position:absolute;left:50%;top:50%;width:2px;height:26px;
+  transform:translate(-50%,-50%);border-radius:99px;background:var(--base-40);
+  opacity:0;pointer-events:none;transition:opacity .13s ease,background .13s ease;
+}
+.cw-split:hover::after{opacity:.8}
+.cw-split.dragging::after{opacity:1;background:var(--base-50)}
+.composer:not([data-mode="split"]) .cw-split{display:none}
+.composer[data-mode="write"] .cw-preview{display:none}
+.composer[data-mode="preview"] .cw-write{display:none}
+.cw-write textarea{
+  width:100%;height:100%;border:0;outline:none;resize:none;background:transparent;
+  padding:10px 14px 40px;font-family:var(--font-mono);font-size:13.5px;line-height:1.72;
+  color:var(--base-80);tab-size:2;
+}
+.cw-preview{padding:10px 16px 40px;font-size:var(--fs-ui-l);line-height:1.65;color:var(--text-muted)}
+/* The note's id, length and save time cost no layout: they float over the
+   editor, fade in on hover and after a save, and never take a click. */
+.cw-meta{
+  position:absolute;inset-inline-end:14px;bottom:10px;z-index:4;pointer-events:none;
+  font-size:10px;font-variant-numeric:tabular-nums;color:var(--text-faint);
+  background:var(--bg-elevated);border:var(--divider);border-radius:99px;padding:2px 10px;
+  box-shadow:var(--shadow-s);opacity:0;transition:opacity .2s ease;
+}
+.composer:hover .cw-meta,.cw-meta.is-shown{opacity:.92}
+.cw-resize{position:absolute;z-index:3}
+.cw-resize[data-dir="e"]{top:35px;bottom:14px;right:0;width:6px;cursor:ew-resize}
+.cw-resize[data-dir="s"]{left:12px;right:12px;bottom:0;height:6px;cursor:ns-resize}
+.cw-resize[data-dir="se"]{right:0;bottom:0;width:14px;height:14px;cursor:nwse-resize}
+.cw-resize[data-dir="se"]::after{
+  content:"";position:absolute;right:3px;bottom:3px;width:10px;height:10px;
+  background:repeating-linear-gradient(135deg,
+    transparent 0 2.6px,var(--base-40) 2.6px 4px);
+  clip-path:polygon(100% 0,100% 100%,0 100%);
+  opacity:.65;transition:opacity var(--speed);
+}
+.composer:hover .cw-resize[data-dir="se"]::after{opacity:1}
+.composer[data-max="1"] .cw-resize{display:none}
+
+/* rendered markdown, shared by the preview and the manager */
+.md-h{font-family:var(--font-ui);font-weight:650;color:var(--text-normal);line-height:1.3;margin:18px 0 7px}
+.md-h1{font-size:1.5em}.md-h2{font-size:1.25em}.md-h3{font-size:1.1em}.md-h4{font-size:1em}
+.md-p{margin:0 0 11px}
+.md-ul,.md-ol{margin:0 0 11px;padding-inline-start:22px}
+.md-ul li,.md-ol li{margin:3px 0}
+.md-code{
+  background:var(--surface-raised);border:var(--divider);border-radius:var(--radius-m);
+  padding:9px 11px;font-family:var(--font-mono);font-size:12.5px;overflow:auto;margin:0 0 11px;
+  color:var(--base-80);
+}
+.md-inline-code{
+  font-family:var(--font-mono);font-size:.88em;background:var(--surface-raised);
+  border-radius:4px;padding:1px 5px;color:var(--c-orange);
+}
+.md-hr{border:0;border-top:1px solid var(--border);margin:16px 0}
+.cw-preview .md-quote{margin:0 0 11px}
+/* Notes mix languages freely, so each block takes the direction of its own
+   first letter: a Hebrew line in an English note reads right to left. */
+.cw-preview :is(p,li,h1,h2,h3,h4,.md-quote),.result-line,.nm-sub,.chat .msg,.card,.md-quote,.doc-p{unicode-bidi:plaintext;text-align:start}
+.cw-empty{padding:24px 16px;color:var(--text-faint);font-size:var(--fs-ui-m);line-height:1.6}
+
+/* ---- notes manager --------------------------------------------------------*/
+.nm{max-width:60rem;margin:0 auto;padding:26px 28px 40vh}
+.nm-tools{display:flex;align-items:center;gap:8px;margin:14px 0 12px}
+.nm-tools .field{margin:0;flex:1;max-width:320px}
+.nm-tool{
+  width:30px;height:30px;border-radius:var(--radius-m);display:grid;place-items:center;
+  color:var(--text-faint);flex:0 0 auto;transition:background var(--speed),color var(--speed);
+}
+.nm-tool:hover{background:var(--bg-hover);color:var(--text-normal)}
+.nm-tool svg{width:15px;height:15px}
+.nm-head,.nm-row{
+  display:grid;grid-template-columns:96px 1fr 132px 96px 60px 104px;gap:12px;align-items:center;
+}
+.nm-head{
+  padding:0 10px 7px;font-size:10px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;
+  color:var(--text-faint);
+}
+.nm-row{
+  padding:9px 10px;border-radius:var(--radius-m);font-size:var(--fs-ui-m);color:var(--text-muted);
+  border-bottom:1px solid var(--border);
+}
+.nm-row:hover{background:var(--bg-hover)}
+.nm-id{font-family:var(--font-mono);font-size:11px;color:var(--text-faint)}
+.nm-title{color:var(--text-normal);font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.nm-sub{display:block;font-weight:400;color:var(--text-faint);font-size:11px;margin-top:2px;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.nm-when,.nm-words{font-size:11px;color:var(--text-faint);font-variant-numeric:tabular-nums}
+.nm-acts{display:flex;gap:2px;justify-content:flex-end}
+.nm-acts button{
+  width:26px;height:24px;border-radius:var(--radius-s);display:grid;place-items:center;color:var(--text-faint);
+}
+.nm-acts button:hover{background:var(--bg-active);color:var(--text-normal)}
+.nm-acts button.danger:hover{background:var(--c-red);color:#fff}
+.nm-acts svg{width:14px;height:14px}
+@media (max-width:820px){
+  .nm-head{display:none}
+  .nm-row{grid-template-columns:1fr 104px;gap:6px}
+  .nm-row .nm-id,.nm-row .nm-when,.nm-row .nm-words{display:none}
+}
+
+/* ---- toast ---------------------------------------------------------------*/
+.toasts{position:fixed;bottom:36px;left:50%;transform:translateX(-50%);z-index:300;display:flex;flex-direction:column;gap:6px;align-items:center}
+.toast{
+  background:var(--bg-elevated);border:1px solid var(--border-strong);border-radius:var(--radius-l);
+  padding:8px 14px;font-size:var(--fs-ui-m);color:var(--text-normal);box-shadow:var(--shadow-m);
+  display:flex;align-items:center;gap:8px;animation:pop .16s ease-out;max-width:min(520px,90vw);
+}
+.toast svg{width:15px;height:15px;flex:0 0 auto}
+.toast.err{border-color:rgba(251,70,76,.5)}
+.toast.err svg{color:var(--c-red)}
+.toast.ok svg{color:var(--c-green)}
+
+/* ---- popover -------------------------------------------------------------*/
+.popover{
+  position:fixed;z-index:250;max-width:300px;background:var(--bg-elevated);
+  border:1px solid var(--border-strong);border-radius:var(--radius-l);box-shadow:var(--shadow-l);
+  padding:11px 13px;font-size:var(--fs-ui-m);line-height:1.55;color:var(--text-muted);
+}
+.popover[hidden]{display:none}
+.popover .pv-code{font-family:var(--font-mono);color:var(--c-orange);font-size:11px}
+.popover .pv-lemma{font-size:19px;color:var(--text-normal);margin:3px 0}
+.popover .pv-tr{color:var(--text-faint);font-style:italic;margin-bottom:6px}
+
+/* ---- mobile bottom navigation --------------------------------------------*/
+.mobile-bar{display:none}
+@media (max-width:760px){
+  /* Touch wants a larger scale throughout: taller band, rounder sheets. */
+  :root{
+    --tab-h:36px;--bar-gap:8px;--gutter:6px;
+    --radius-tab:9px;--radius-sheet:14px;--radius-flare:9px;
+  }
+  .sidebar{--radius-tab:9px;--radius-sheet:14px;--radius-flare:9px}
+  .statusbar{display:none}
+  .sidebar{bottom:0}
+  /* The active tab spans the strip, so the bar must clear the sheet's corner
+     on the right exactly as the sidebar strips do on the left. */
+  .tabbar{padding-inline-end:calc(var(--gutter) + var(--radius-sheet) + var(--radius-flare))}
+  .mobile-bar{
+    display:flex;position:fixed;left:50%;z-index:60;
+    bottom:calc(14px + env(safe-area-inset-bottom,0px));
+    transform:translateX(-50%);
+    gap:3px;padding:4px;border-radius:99px;
+    /* A blur over a flat backdrop returns that flat colour, so the pill carries
+       its own film to stay legible as glass when nothing is moving behind it. */
+    background-color:var(--glass);
+    background-image:linear-gradient(var(--glass-film),var(--glass-film));
+    border:1px solid var(--glass-edge);
+    -webkit-backdrop-filter:blur(24px) saturate(180%);
+    backdrop-filter:blur(24px) saturate(180%);
+    box-shadow:var(--shadow-l),inset 0 1px 0 rgba(255,255,255,.07);
+    transition:transform .22s cubic-bezier(.2,.9,.3,1),opacity .18s ease;
+  }
+  /* While the finger is moving the bar follows the scroll one to one; the
+     transition only exists for the snap at the end. */
+  body.nav-tracking .mobile-bar{transition:none}
+  .mobile-bar.is-stowed{pointer-events:none}
+  .mobile-bar button{
+    width:50px;height:46px;border-radius:99px;display:grid;place-items:center;
+    color:var(--text-faint);transition:color var(--speed);
+  }
+  .mobile-bar button svg{width:23px;height:23px}
+  .mobile-bar button[disabled]{opacity:.28;pointer-events:none}
+  .mobile-bar button[aria-pressed="true"]{color:var(--accent-2)}
+  .mobile-bar button:active{color:var(--text-normal)}
+  .mobile-bar .flip svg{transform:rotate(180deg)}
+
+
+  .tabbar .nav-group,.tabbar .tb-actions,.tabbar .win-ctl,.tabbar .bar-sep{display:none}
+  #barApp{padding:0 6px}
+  .tabstrip .tab:not(.is-active){display:none}
+  .tabstrip .tab.is-active{flex:1 1 auto;max-width:none}
+  .tabstrip .t-close{display:none}
+  .tabstrip>.tb-btn{display:none}
+  .t-switch{display:grid!important}
+  /* A floating window makes no sense on a phone. */
+  .composer{
+    left:var(--gutter)!important;right:var(--gutter)!important;
+    top:calc(var(--mac-inset) + var(--gutter))!important;
+    width:auto!important;
+    height:calc(100dvh - var(--mac-inset) - var(--gutter) * 2)!important;
+    border-radius:var(--radius-sheet);
+  }
+  .composer .cw-resize{display:none}
+  .cw-bar{cursor:default}
+}
+
+/* Touch targets, wherever there is no pointer to hover with. */
+@media (hover:none){
+  .ch-chip{height:34px}
+  .mi{padding:12px 14px}
+  .sheet-row,.mobile-bar button{-webkit-tap-highlight-color:transparent}
+  .ink-bar{position:fixed;inset-inline-end:14px;bottom:calc(76px + env(safe-area-inset-bottom,0px));z-index:70}
+  .ink-bar button{width:38px;height:38px}
+  .ink-bar svg{width:18px;height:18px}
+}
+
+/* ---- verse action sheet ---------------------------------------------------*/
+.t-switch{display:none;place-items:center;width:18px;height:18px;flex:0 0 auto;color:var(--text-faint)}
+.t-switch svg{width:12px;height:12px;transform:rotate(90deg)}
+.sheet-scrim{
+  position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:215;
+  opacity:0;pointer-events:none;transition:opacity .18s ease;
+}
+.sheet-scrim.is-open{opacity:1;pointer-events:auto}
+.sheet{
+  position:fixed;left:8px;right:8px;z-index:216;
+  bottom:calc(8px + env(safe-area-inset-bottom,0px));
+  background:var(--bg-elevated);border:1px solid var(--border-strong);
+  border-radius:var(--radius-xl);box-shadow:var(--shadow-l);overflow:hidden;
+  transform:translateY(calc(100% + 24px));transition:transform .22s cubic-bezier(.2,.9,.3,1);
+}
+.sheet.is-open{transform:none}
+.sheet-grip{width:36px;height:4px;border-radius:99px;background:var(--base-40);margin:9px auto 4px}
+.sheet-head{
+  padding:4px 18px 10px;font-size:var(--fs-ui-m);color:var(--text-faint);
+  border-bottom:1px solid var(--border);
+}
+.sheet-head b{display:block;color:var(--text-normal);font-size:var(--fs-ui-l);margin-bottom:2px}
+/* Two lines of the verse, ended by the layout rather than cut mid-word. */
+.sheet-head .sh-text{
+  display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;line-clamp:2;overflow:hidden;
+  unicode-bidi:plaintext;text-align:start;
+}
+.sheet-rows{padding:6px;max-height:60vh;overflow:auto}
+.sheet-row{
+  display:flex;align-items:center;gap:14px;width:100%;height:48px;padding:0 12px;
+  border-radius:var(--radius-m);color:var(--text-normal);font-size:var(--fs-ui-l);text-align:start;
+}
+.sheet-row:active{background:var(--bg-active)}
+.sheet-row svg{width:18px;height:18px;color:var(--accent-2);flex:0 0 auto}
+.sheet-row .hint{margin-inline-start:auto;font-size:11px;color:var(--text-faint)}
+
+/* ---- mobile --------------------------------------------------------------*/
+#barApp{display:none}
+#barApp span:last-child{display:none}   /* the mark carries the identity */
+@media (max-width:900px){
+  #barApp{display:flex}
+}
+.sb-app{font-weight:600;color:var(--text-muted)}
+/* The scrim fades with the drawer so an interrupted drag looks like one motion. */
+.scrim-mobile{
+  position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:40;
+  opacity:0;pointer-events:none;transition:opacity .2s ease;
+}
+body.has-drawer .scrim-mobile{opacity:1;pointer-events:auto}
+body.drawer-dragging .scrim-mobile{opacity:var(--drawer-p,0);transition:none;pointer-events:auto}
+body.drawer-dragging .sidebar{transition:none}
+@media (hover:none){
+  .vnum{padding:2px 4px;margin-inline-start:-4px}
+}
+@media (max-width:900px){
+  /* Wide enough for a chapter grid, never so wide the scrim is a sliver. */
+  :root{
+    --sidebar-l:clamp(248px,78vw,360px);
+    --sidebar-r:clamp(260px,82vw,380px);
+    --measure-em:0;
+  }
+  .ribbon{display:none}
+  body[data-ribbon="off"] .rib-head{display:none}
+  /* A drawer is still made of the same sheets: gutters, radii and connected
+     tabs are what the app looks like, in every layout. */
+  .sidebar{
+    position:fixed;top:0;bottom:0;z-index:50;box-shadow:var(--shadow-l);
+    padding-bottom:var(--gutter);
+  }
+  /* A drawer has two free edges, so both get the gutter. */
+  .sidebar .pane-view.is-active{margin-inline:var(--gutter)}
+  .sidebar .pane-tabs{--sheet-inset:var(--gutter);--sheet-inset-r:var(--gutter)}
+  .sidebar.left{left:0;transform:translateX(-102%);transition:transform .2s ease}
+  .sidebar.right{right:0;transform:translateX(102%);transition:transform .2s ease}
+  /* Drawers come in from the side they live on, which mirrors in RTL. */
+  html[dir="rtl"] .sidebar.left{left:auto;right:0;transform:translateX(102%)}
+  html[dir="rtl"] .sidebar.right{right:auto;left:0;transform:translateX(-102%)}
+  .sidebar[hidden]{display:flex}
+  body.drawer-l .sidebar.left,body.drawer-r .sidebar.right{transform:none}
+  .resizer{display:none}
+  .note{padding:22px 18px 40vh}
+  .source{padding:22px 18px 40vh}
+  .inline-title{font-size:24px}
+  .ch-num{font-size:42px}
+  .ch-caption{font-size:17px}
+  /* basis auto sizes a pane to its content, which leaves nothing to scroll;
+     basis 0 with min-height 0 is what makes the inner scroller bounded. */
+  .panes.is-split{flex-direction:column}
+  .leaf-divider{display:none}
+  .panes.is-split .leaf{flex:1 1 0%!important;min-height:0;border-top:var(--divider)}
+  .panes.is-split .leaf:first-child{border-top:0}
+  .statusbar .hide-sm{display:none}
+  .win-ctl button:nth-child(3){display:none}
+}
+@media (max-width:760px){
+  .tabbar .tb-actions #btnSplit,.tabbar .tb-actions #btnInk{display:none}
+  .bar-sep{display:none}
+}
+@media (max-width:560px){
+  .modal{width:96vw}
+  .scrim{padding-top:6vh}
+}
+@media print{
+  .ribbon,.sidebar,.tabbar,.statusbar,.win-buttons,.vbar,.ink-bar{display:none!important}
+  body{overflow:visible}
+}

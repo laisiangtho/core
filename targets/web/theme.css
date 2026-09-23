@@ -1,0 +1,6 @@
+/*
+ * Web target theme. The shell's own violet ramp is kept; this file is where a
+ * web-only override would go, at the ramp's specificity:
+ *
+ *   html[data-theme="dark"], html[data-theme="light"] { --accent: #7c3aed; }
+ */
