@@ -17,6 +17,12 @@ import { MAX_ROWS } from '../core/settings.js';
 /** The shortest a sidebar row may be dragged. */
 const MIN_ROW_PX = 96;
 
+/**
+ * Below this width there is no room for a column beside the text, so a sidebar
+ * arrives as a drawer over it. The stylesheet switches at the same number.
+ */
+const DRAWER_WIDTH = 900;
+
 export function createChrome(root, ctx) {
   const { registry, settings } = ctx;
 
@@ -44,6 +50,20 @@ export function createChrome(root, ctx) {
     right: barButton('panel-r', 'side.right'),
   };
 
+  // Shown only in the narrow layout, where the ribbon is not: the app's mark,
+  // and the way back to the command palette.
+  const barApp = h('button', { class: 'app-pill', id: 'barApp', 'data-l': 'cmd.palette', onclick: () => run('shell.palette') },
+    h('span', { class: 'app-mark' }, h('img', { src: './icons/icon.svg', alt: '', width: 18, height: 18 })),
+    h('span', {}, L('app.name')));
+
+  const scrim = h('div', { class: 'scrim-mobile', onclick: () => closeDrawers() });
+  const mobileBar = h('nav', { class: 'mobile-bar', role: 'toolbar' },
+    mobileButton('library', 'side.left', () => toggleSide('left')),
+    mobileButton('chev', 'cmd.prev', () => run('passage.prev-chapter'), 'flip'),
+    mobileButton('chev', 'cmd.next', () => run('passage.next-chapter')),
+    mobileButton('inspector', 'side.right', () => toggleSide('right')),
+    mobileButton('more', 'cmd.palette', () => run('shell.palette')));
+
   const app = h('div', { id: 'app' },
     h('div', { class: 'body-row' },
       h('nav', { class: 'ribbon' },
@@ -55,6 +75,7 @@ export function createChrome(root, ctx) {
       h('main', { class: 'workspace' },
         h('div', { class: 'tabbar band-drag' },
           h('div', { class: 'nav-group' }, navPrev, navNext),
+          barApp,
           tabStrip,
           h('div', { class: 'tb-actions' },
             addPane,
@@ -64,9 +85,12 @@ export function createChrome(root, ctx) {
         panes),
       sides.right.element),
     h('div', { class: 'statusbar' }, statusLeft, h('span', { class: 'spacer' }), statusRight),
+    scrim,
+    mobileBar,
     toasts);
 
   root.replaceChildren(app);
+  applyWindowFrame();
   applyChrome(settings.get());
 
   navPrev.addEventListener('click', () => run('passage.prev-chapter'));
@@ -188,7 +212,18 @@ export function createChrome(root, ctx) {
       },
       build,
       mount() {
-        for (const { pane, element: view } of views.values()) pane.mount(view.querySelector('.pane-body'));
+        // A pane that cannot build itself says so inside its own body; the
+        // other panes, and the text, are unaffected.
+        for (const { pane, element: view } of views.values()) {
+          const body = view.querySelector('.pane-body');
+          try {
+            pane.mount(body);
+          } catch (err) {
+            body.replaceChildren(h('div', { class: 'pane-broken' },
+              h('p', {}, L('msg.paneBroken', { name: pane.title })),
+              h('pre', {}, err.message)));
+          }
+        }
       },
       get empty() { return views.size === 0; },
       ids: () => rows.flatMap((r) => r.views),
@@ -228,7 +263,12 @@ export function createChrome(root, ctx) {
     drop(view, target) {
       const from = ['left', 'right'].find((side) => sides[side].ids().includes(view));
       if (!from) return;
-      if (from !== target.side) sides[target.side].adopt(view);
+      if (from !== target.side) {
+        sides[target.side].adopt(view);
+        // A pane dropped into a sidebar that was empty opens that sidebar.
+        const key = target.side === 'left' ? 'leftSidebar' : 'rightSidebar';
+        if (!ctx.state.get()[key]) ctx.state.set({ [key]: true });
+      }
 
       const source = sides[from].rows;
       const destination = sides[target.side].rows;
@@ -237,8 +277,9 @@ export function createChrome(root, ctx) {
       const at = home.views.indexOf(view);
 
       if (target.type === 'strip') {
-        const row = destination[target.group];
-        if (!row) return;
+        // Dropping into a sidebar that holds nothing yet gives it its first row.
+        if (!destination.length) destination.push({ views: [], active: null, size: 1 });
+        const row = destination[target.group] ?? destination[0];
         home.views = home.views.filter((id) => id !== view);
         let index = target.index;
         if (row === home && at > -1 && at < index) index--; // the removal shifts the gap
@@ -264,6 +305,19 @@ export function createChrome(root, ctx) {
     },
   });
 
+  /**
+   * A window with no system title bar of its own puts the system's buttons over
+   * this app's top band, and the band has to leave room for them: a strip at
+   * the top on macOS, where the traffic lights sit, and the end of the row
+   * elsewhere. A target with an ordinary title bar sets nothing and the layout
+   * is untouched.
+   */
+  function applyWindowFrame() {
+    const frame = ctx.platform.frame ?? null;
+    if (frame === 'inset') document.body.dataset.platform = 'darwin';
+    else if (frame === 'overlay') document.body.dataset.shell = 'on';
+  }
+
   /** Chrome the reader can hide, and the widths they can drag. */
   function applyChrome(s) {
     const body = document.body;
@@ -273,16 +327,62 @@ export function createChrome(root, ctx) {
       const open = side === 'left' ? s.leftSidebar : s.rightSidebar;
       const empty = sides[side].empty;
       body.dataset[side] = open && !empty ? 'open' : 'shut';
-      sides[side].element.hidden = !open || empty;
+      // A sidebar with nothing in it is out of the way, but it stays in the
+      // document: while a pane is being dragged it shows a rail to drop onto,
+      // or the last pane moved out of a sidebar could never be moved back.
+      sides[side].element.dataset.empty = String(empty);
+      sides[side].element.hidden = !open && !empty;
       toggles[side].setAttribute('aria-pressed', String(open && !empty));
     }
     body.style.setProperty('--sidebar-l', `${s.leftWidth}px`);
     body.style.setProperty('--sidebar-r', `${s.rightWidth}px`);
+    // A drawer belongs to the narrow layout only; a window growing back to a
+    // column layout must not leave one open over the text.
+    if (!isDrawerLayout() && body.classList.contains('has-drawer')) closeDrawers();
+    paintMobileBar();
+  }
+
+  /**
+   * A sidebar as a drawer over the text — the same sheets, a different way in.
+   * One drawer at a time, and the scrim closes whichever is open.
+   */
+  function isDrawerLayout() {
+    return window.innerWidth <= DRAWER_WIDTH;
+  }
+
+  function closeDrawers() {
+    document.body.classList.remove('drawer-l', 'drawer-r', 'has-drawer');
+    paintMobileBar();
   }
 
   function toggleSide(side) {
+    if (isDrawerLayout()) {
+      const cls = side === 'left' ? 'drawer-l' : 'drawer-r';
+      const open = document.body.classList.contains(cls);
+      closeDrawers();
+      if (!open && !sides[side].empty) {
+        document.body.classList.add(cls, 'has-drawer');
+      }
+      paintMobileBar();
+      return;
+    }
     const key = side === 'left' ? 'leftSidebar' : 'rightSidebar';
     ctx.state.set({ [key]: !ctx.state.get()[key] });
+  }
+
+  function mobileButton(name, labelKey, onclick, extra = '') {
+    return h('button', { class: extra, 'data-l': labelKey, 'data-mb': labelKey, onclick }, icon(name));
+  }
+
+  /** The bottom bar reports the same state the band does. */
+  function paintMobileBar() {
+    const body = document.body;
+    const [left, , , right] = mobileBar.children;
+    left.setAttribute('aria-pressed', String(body.classList.contains('drawer-l')));
+    right.setAttribute('aria-pressed', String(body.classList.contains('drawer-r')));
+    for (const button of mobileBar.querySelectorAll('[data-mb="cmd.prev"], [data-mb="cmd.next"]')) {
+      button.disabled = body.dataset.tab !== 'chapter';
+    }
   }
 
   function wireResizers() {
@@ -312,6 +412,7 @@ export function createChrome(root, ctx) {
    */
   function setChapterMode(on) {
     document.body.dataset.tab = on ? 'chapter' : 'doc';
+    paintMobileBar();
     for (const button of app.querySelectorAll('[data-needs-chapter]')) {
       button.disabled = !on;
       button.setAttribute('aria-disabled', String(!on));
@@ -341,12 +442,23 @@ export function createChrome(root, ctx) {
     return h('button', { class: 'rib', id, title: text, 'aria-label': text, onclick }, icon(name));
   }
 
-  function notify(message, kind = 'info') {
+  /**
+   * A passing message. One that carries an action — "a new version is ready",
+   * and the button that takes it — stays long enough to be read and acted on,
+   * and can be dismissed by hand.
+   * @param {{ action?: { label: string, run: () => void } }} [options]
+   */
+  function notify(message, kind = 'info', { action = null } = {}) {
     const cls = kind === 'error' ? 'toast err' : kind === 'ok' ? 'toast ok' : 'toast';
     const toast = h('div', { class: cls, role: kind === 'error' ? 'alert' : 'status' },
       icon(kind === 'error' ? 'alert' : 'info'), h('span', {}, message));
+    if (action) {
+      toast.append(
+        h('button', { class: 'toast-act', onclick: () => { toast.remove(); action.run(); } }, action.label),
+        h('button', { class: 'toast-x', title: L('cmd.close'), 'aria-label': L('cmd.close'), onclick: () => toast.remove() }, icon('x')));
+    }
     toasts.append(toast);
-    setTimeout(() => toast.remove(), kind === 'error' ? 9000 : 3500);
+    setTimeout(() => toast.remove(), action ? 30000 : kind === 'error' ? 9000 : 3500);
   }
 
   /** Status bar: left is context, right is state the reader can click. */
@@ -370,10 +482,12 @@ export function createChrome(root, ctx) {
     wireResizers();
     applyChrome(ctx.state.get());
     applyStrings(app);
+    window.addEventListener('resize', () => applyChrome(ctx.state.get()));
   }
 
   return {
     element: app, tabStrip, panes, start, notify, setStatus, refreshThemeIcon, toggleSide, applyChrome, setChapterMode,
+    closeDrawers, isDrawerLayout,
     selectPane: (side, id) => {
       // A pane the reader moved to the other sidebar is selected where it is.
       const where = sides[side].has(id) ? side : side === 'left' ? 'right' : 'left';

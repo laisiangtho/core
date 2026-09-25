@@ -16,7 +16,7 @@ const PAD = 8;
 const GAP = 4;
 const EDGE = 8;
 
-export function createNavPop(ctx, { bookName, lang }) {
+export function createNavPop(ctx, { bookName, lang, number, english, englishRef }) {
   const grid = h('div', { class: 'np-grid' });
   const element = h('div', { class: 'navpop', role: 'dialog', hidden: true }, grid);
   let anchor = null;
@@ -64,12 +64,12 @@ export function createNavPop(ctx, { bookName, lang }) {
       const books = category.books.filter((b) => b.testament === canon.testament);
       grid.replaceChildren(...books.map((b) => h('button', {
         class: `np-book${b.id === at.book ? ' is-active' : ''}`,
-        title: bookName(b.id),
+        title: english(b.id), 'aria-label': english(b.id),
         tabindex: b.id === at.book ? '0' : '-1',
         onclick: () => paint('chapters', { book: b.id, chapter: b.id === at.book ? at.chapter : 0 }),
       },
         // Numbered by canon order, so the list reads as the sequence it is.
-        h('span', { class: 'np-n' }, String(b.id)),
+        h('span', { class: 'np-n' }, number(b.id)),
         h('span', { class: 'np-name', lang: lang() }, bookName(b.id)))));
       element.className = 'navpop is-books';
       element.setAttribute('aria-label', category.testaments.find((t) => t.id === canon.testament)?.name ?? '');
@@ -78,9 +78,10 @@ export function createNavPop(ctx, { bookName, lang }) {
       const book = category.book(at.book);
       grid.replaceChildren(...Array.from({ length: book.chapters }, (_, i) => i + 1).map((n) => h('button', {
         class: `ch-chip${present.has(n) ? ' has-text' : ''}${n === at.chapter ? ' is-active' : ''}`,
+        title: englishRef(at.book, n), 'aria-label': englishRef(at.book, n),
         tabindex: n === at.chapter || (!at.chapter && n === 1) ? '0' : '-1',
         onclick: () => { const go = onPick; close(); go?.(at.book, n); },
-      }, String(n))));
+      }, number(n))));
       element.className = 'navpop is-chapters';
       element.setAttribute('aria-label', L('lbl.chaptersOf', { book: bookName(at.book) }));
     }

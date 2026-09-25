@@ -5,6 +5,7 @@ import { app, BrowserWindow, shell } from 'electron';
 import { fileURLToPath } from 'node:url';
 
 import { APP_ORIGIN } from './protocol.js';
+import { loadWindowState, watchWindowState } from './state.js';
 
 const PRELOAD = fileURLToPath(new URL('../preload/index.cjs', import.meta.url));
 
@@ -14,15 +15,45 @@ export function rendererUrl() {
   return !app.isPackaged && dev ? dev : `${APP_ORIGIN}/index.html`;
 }
 
+/** The dark background the app starts on, so the first paint is not a white flash. */
+const BACKGROUND = '#181818';
+
+/**
+ * The window's own chrome.
+ *
+ * The application's top row is a band of its own — tabs, navigation, the panel
+ * toggles — and a system title bar above it wastes a strip of every screen on
+ * a second, emptier one. So where the system will still draw its own buttons
+ * over the app's band, the title bar is hidden: the traffic lights on macOS,
+ * the caption buttons through the title-bar overlay on Windows. The buttons
+ * stay the system's own; nothing here draws a close button of its own.
+ *
+ * Linux keeps its title bar. The overlay is not drawn there, and a window with
+ * no way to close it is worse than a window with one row too many.
+ *
+ * The renderer is told which arrangement it got (see preload) so the band can
+ * leave room in the right corner.
+ */
+function frame() {
+  if (process.platform === 'darwin') return { titleBarStyle: 'hiddenInset', trafficLightPosition: { x: 12, y: 12 } };
+  if (process.platform === 'win32') {
+    return { titleBarStyle: 'hidden', titleBarOverlay: { color: BACKGROUND, symbolColor: '#b8b8b8', height: 38 } };
+  }
+  return {};
+}
+
 export function createMainWindow() {
+  const state = loadWindowState();
   const win = new BrowserWindow({
-    width: 1280,
-    height: 820,
+    width: state.width,
+    height: state.height,
+    ...(state.x === undefined ? {} : { x: state.x, y: state.y }),
     minWidth: 720,
     minHeight: 480,
     show: false,
-    backgroundColor: '#181818',
+    backgroundColor: BACKGROUND,
     title: 'Lai Siangtho',
+    ...frame(),
     webPreferences: {
       preload: PRELOAD,
       contextIsolation: true,
@@ -40,6 +71,9 @@ export function createMainWindow() {
     if (url.startsWith('https://')) shell.openExternal(url);
     return { action: 'deny' };
   });
+
+  if (state.maximised) win.maximize();
+  watchWindowState(win);
 
   win.once('ready-to-show', () => win.show());
   win.loadURL(rendererUrl());

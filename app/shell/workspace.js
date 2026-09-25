@@ -13,6 +13,7 @@
 import { alignChapter } from '../core/align.js';
 import { createResolver } from '../core/reference.js';
 import { fromMarkdown, toMarkdown } from '../core/source.js';
+import { localizeNumber } from '../core/translation.js';
 import { h } from './dom.js';
 import { wirePaneDrag, wireTabDrag } from './dragdrop.js';
 import { createFloats } from './floats.js';
@@ -22,6 +23,8 @@ import { L } from './i18n.js';
 import { chapterNote, LAYOUTS } from './reading.js';
 
 const MAX_PANES = 4;
+/** Where the reader's text-direction corrections are kept, one per translation. */
+const DIR_KEY = 'direction';
 
 export function createWorkspace(ctx, chrome) {
   const { category, registry, state, store } = ctx;
@@ -47,20 +50,46 @@ export function createWorkspace(ctx, chrome) {
       persistTabs();
     },
     detach: (id) => detach(id),
-    activate: (id) => activate(id),
+    activate: (id) => {
+      // Pressing the tab that is already active, where it is the only one on
+      // screen, is how the reader reaches the rest.
+      if (id === activeId && chrome.isDrawerLayout?.()) { openTabSwitcher(); return; }
+      activate(id);
+    },
     hint: floats.hint,
   });
   wirePaneDrag(chrome.panes, { move: movePane });
 
+  /**
+   * The translation as it will be read: its stored form, with the reader's own
+   * correction to the text direction applied if they made one. A file that
+   * declares the wrong direction is not rare, and a reader can see it at a
+   * glance while nothing but another download would otherwise change it.
+   */
   async function openTranslation(identify) {
-    const meta = await store.getMeta(identify);
-    const key = `${identify}@${meta.version}@${meta.installedAt}`;
+    const stored = await store.getMeta(identify);
+    const override = ctx.records.get(DIR_KEY, {})?.[identify] ?? null;
+    const meta = override && override !== stored.info.language.textdirection
+      ? { ...stored, info: { ...stored.info, language: { ...stored.info.language, textdirection: override } } }
+      : stored;
+    const key = `${identify}@${meta.version}@${meta.installedAt}@${override ?? ''}`;
     const cached = openTranslations.get(identify);
     if (cached?.key === key) return cached;
     const entry = { key, meta, resolver: createResolver({ category, books: meta.books, aliases: await ctx.aliases(identify) }) };
     openTranslations.set(identify, entry);
     return entry;
   }
+
+  /** Set, or clear with null, the reader's correction for one translation. */
+  async function setDirection(identify, direction) {
+    const held = { ...(ctx.records.get(DIR_KEY, {}) ?? {}) };
+    if (direction) held[identify] = direction; else delete held[identify];
+    await ctx.records.save(DIR_KEY, held);
+    openTranslations.delete(identify);
+    await render();
+  }
+
+  const directionOf = (identify) => ctx.records.get(DIR_KEY, {})?.[identify] ?? null;
 
   // --- tabs ---------------------------------------------------------------
 
@@ -77,18 +106,22 @@ export function createWorkspace(ctx, chrome) {
   function activate(id) {
     activeId = id;
     const tab = activeTab();
+    // Which tab is in front is recorded before anything else, because moving to
+    // a tab on another passage hands the rest of the work to the state change —
+    // and that path used to return without ever writing the tab down.
+    persistTabs();
     if (tab?.kind === 'chapter') {
       const { book, chapter } = state.get();
       if (tab.book !== book || tab.chapter !== chapter) { state.set({ book: tab.book, chapter: tab.chapter }); return; }
     }
     render();
-    persistTabs();
   }
 
   function openChapter(book, chapter, { newTab: wantsNew = false } = {}) {
     const current = activeTab();
     if (wantsNew || current?.kind !== 'chapter') {
       activeId = newTab('chapter', book, chapter).id;
+      persistTabs();
     }
     const here = state.get();
     if (here.book !== book || here.chapter !== chapter) { state.set({ book, chapter }); return Promise.resolve(); }
@@ -229,11 +262,15 @@ export function createWorkspace(ctx, chrome) {
   function renderTabs() {
     chrome.tabStrip.replaceChildren(...tabs.map((tab) => {
       const doc = tab.kind === 'chapter' ? null : registry.getDoc(tab.kind);
-      const title = doc ? doc.title : `${bookLabel(tab.book)} ${tab.chapter}`;
+      const title = doc ? doc.title : `${bookLabel(tab.book)} ${localNumber(tab.chapter)}`;
       return h('div', {
         // Activation comes from the tab drag: a press that never travels is a
         // click, so a drag never costs the reader an activation.
-        class: `tab${tab.id === activeId ? ' is-active' : ''}`, role: 'tab', dataset: { tab: tab.id },
+        class: `tab${tab.id === activeId ? ' is-active' : ''}`, role: 'tab', dataset: { tab: tab.id, kind: tab.kind },
+        // The label may be in a script the reader cannot read; the canon's own
+        // name is always here for them.
+        title: doc ? doc.title : englishRef(tab.book, tab.chapter),
+        'aria-label': doc ? doc.title : englishRef(tab.book, tab.chapter),
         ondblclick: () => detach(tab.id),
       },
         icon(doc ? doc.icon : 'book-open'),
@@ -241,11 +278,45 @@ export function createWorkspace(ctx, chrome) {
         h('button', {
           class: 't-close', title: L('cmd.closeTab'), 'aria-label': L('cmd.closeTab'),
           onclick: (e) => { e.stopPropagation(); closeTab(tab.id); },
-        }, icon('x')));
+        }, icon('x')),
+        // Only the active tab is shown in the narrow layout, so it carries the
+        // way to the others.
+        h('span', { class: 't-switch' }, icon('chev')));
     }),
     h('button', {
       class: 'tab-new', title: L('cmd.newTab'), 'aria-label': L('cmd.newTab'), onclick: () => newChapterTab(),
     }, icon('plus')));
+    // With more tabs than the strip can show, the one in front is the one that
+    // has to be visible.
+    const active = chrome.tabStrip.querySelector('.tab.is-active');
+    if (active && chrome.tabStrip.scrollWidth > chrome.tabStrip.clientWidth) {
+      active.scrollIntoView({ block: 'nearest', inline: 'nearest' });
+    }
+  }
+
+  /** Every open tab as a list, plus a way to open or close one. */
+  function openTabSwitcher() {
+    const items = tabs.map((tab) => {
+      const doc = tab.kind === 'chapter' ? null : registry.getDoc(tab.kind);
+      return {
+        id: tab.id,
+        icon: doc ? doc.icon : 'book-open',
+        title: doc ? doc.title : `${bookLabel(tab.book)} ${localNumber(tab.chapter)}`,
+        sub: [doc ? '' : englishRef(tab.book, tab.chapter), tab.id === activeId ? L('lbl.openNow') : '']
+          .filter(Boolean).join(' · '),
+      };
+    });
+    items.push({ act: 'new', icon: 'plus', title: L('cmd.newTab') });
+    if (tabs.length > 1) items.push({ act: 'close', icon: 'x', title: L('cmd.closeTab') });
+    ctx.shell.pick({
+      placeholder: L('ph.tabs'),
+      items,
+      onPick: (item) => {
+        if (item.act === 'new') { newChapterTab(); return; }
+        if (item.act === 'close') { if (activeId) closeTab(activeId); return; }
+        activate(item.id);
+      },
+    });
   }
 
   /** A second tab on the passage in view, then the switcher to send it somewhere. */
@@ -258,8 +329,32 @@ export function createWorkspace(ctx, chrome) {
     ctx.shell.openSwitcher(book);
   }
 
+  /**
+   * Names come from three places, in this order: the translation in front of
+   * the reader, the language pack for its language, and the canon — which is
+   * always English, and is therefore also what every control offers as its
+   * accessible name (see `englishBook`).
+   */
+  const pack = () => ctx.langPacks.forMeta(primaryMeta);
+
   function bookLabel(book) {
-    return primaryMeta?.books[book]?.name ?? category.book(book).name;
+    return primaryMeta?.books[book]?.name ?? pack()?.books[book]?.name ?? category.book(book).name;
+  }
+
+  /** The canon's own name, for a reader who cannot read the script. */
+  const englishBook = (book) => category.book(book).name;
+  const englishTestament = (id) => category.testaments.find((t) => t.id === id)?.name ?? '';
+
+  /** A passage as the canon names it: what a tooltip says under a localised label. */
+  function englishRef(book, chapter, verse) {
+    const base = chapter === undefined ? englishBook(book) : `${englishBook(book)} ${chapter}`;
+    return verse === undefined ? base : `${base}:${verse}`;
+  }
+
+  /** A number in the primary translation's own digits. */
+  function localNumber(value) {
+    const digit = primaryMeta?.digit?.length ? primaryMeta.digit : pack()?.digit;
+    return localizeNumber(value, digit);
   }
 
   /** The tag for whatever script the primary translation is written in. */
@@ -267,9 +362,11 @@ export function createWorkspace(ctx, chrome) {
     return primaryMeta?.info.language.code ?? '';
   }
 
-  /** The testament as the translation names it, or the canon's own name. */
+  /** The testament as the translation names it, then as its language does. */
   function testamentLabel(id) {
-    return primaryMeta?.testament?.[id]?.info?.name ?? category.testaments.find((t) => t.id === id)?.name ?? '';
+    return primaryMeta?.testament?.[id]?.info?.name
+      ?? pack()?.testaments[id]?.name
+      ?? englishTestament(id);
   }
 
   async function ensurePrimaryMeta() {
@@ -283,26 +380,63 @@ export function createWorkspace(ctx, chrome) {
     renderTabs();
     ctx.shell.refreshNames?.();
     state.set({ names: (state.get().names ?? 0) + 1 });
+    loadPack();
   }
 
-  function crumbs(book, chapter) {
+  /**
+   * Ask for the language pack behind the translation now in front of the
+   * reader. It arrives late or not at all; when it does, every name in the app
+   * is repainted from the same counter the translation itself uses.
+   */
+  function loadPack() {
+    const meta = primaryMeta;
+    if (!meta) return;
+    const before = pack();
+    ctx.langPacks.ensureFor(meta).then((next) => {
+      if (!next || next === before || primaryMeta !== meta) return;
+      renderTabs();
+      ctx.shell.refreshNames?.();
+      state.set({ names: (state.get().names ?? 0) + 1 });
+    }, () => { /* a missing pack is normal: the canon names the books */ });
+  }
+
+  /**
+   * The crumb bar reads translation ▸ testament ▸ book ▸ chapter, and every
+   * crumb whose label is in the translation's language carries the canon's
+   * English name as its accessible name — a reader who cannot read the script
+   * can still tell what a click will open.
+   */
+  function crumbs(pane, book, chapter) {
     const canon = category.book(book);
     const sep = () => h('span', { class: 'crumb-sep' }, '/');
+    const testament = testamentLabel(canon.testament);
+    const bookName = bookLabel(book);
+
     return h('div', { class: 'crumbs' },
       h('button', {
+        class: 'crumb crumb-tr', dataset: { crumb: 'translation' },
+        title: `${pane.meta.info.name} — ${L('cmd.translation')}`,
+        'aria-label': `${L('cmd.translation')}: ${pane.meta.info.name}`,
+        onclick: () => ctx.shell.openTranslationPicker(pane.index),
+      }, pane.meta.info.shortname),
+      sep(),
+      h('button', {
         class: 'crumb', dataset: { crumb: 'testament' }, 'aria-expanded': 'false', 'aria-haspopup': 'dialog',
+        title: englishTestament(canon.testament), 'aria-label': englishTestament(canon.testament),
         onclick: (e) => ctx.shell.openCrumb(e.currentTarget, 'books', { book, chapter }),
-      }, h('span', { lang: primaryLang() }, testamentLabel(canon.testament))),
+      }, h('span', { lang: primaryLang() }, testament)),
       sep(),
       h('button', {
         class: 'crumb', dataset: { crumb: 'book' }, 'aria-expanded': 'false', 'aria-haspopup': 'dialog',
+        title: englishBook(book), 'aria-label': englishBook(book),
         onclick: (e) => ctx.shell.openCrumb(e.currentTarget, 'books', { book, chapter }),
-      }, h('span', { class: 'cb-full', lang: primaryLang() }, bookLabel(book)), h('span', { class: 'cb-short' }, canon.shortname)),
+      }, h('span', { class: 'cb-full', lang: primaryLang() }, bookName), h('span', { class: 'cb-short' }, canon.shortname)),
       sep(),
       h('button', {
         class: 'crumb is-current', 'aria-expanded': 'false', 'aria-haspopup': 'dialog',
+        title: englishRef(book, chapter), 'aria-label': englishRef(book, chapter),
         onclick: (e) => ctx.shell.openCrumb(e.currentTarget, 'chapters', { book, chapter }),
-      }, String(chapter)));
+      }, localNumber(chapter)));
   }
 
   async function renderPanes() {
@@ -319,7 +453,15 @@ export function createWorkspace(ctx, chrome) {
       const doc = registry.getDoc(tab.kind);
       const body = h('div', { class: 'leaf-scroll scroll' });
       chrome.panes.replaceChildren(h('div', { class: 'leaf', dataset: { doc: doc.id } }, body));
-      disposeDoc = doc.mount(body) ?? null;
+      // A document that throws on mount leaves the tab open and says why, so
+      // the reader can close it and carry on reading.
+      try {
+        disposeDoc = doc.mount(body) ?? null;
+      } catch (err) {
+        disposeDoc = null;
+        body.replaceChildren(h('div', { class: 'pane-broken' },
+          h('p', {}, L('msg.paneBroken', { name: doc.title })), h('pre', {}, err.message)));
+      }
       // Book names come from the primary translation; load it even when no
       // chapter is on screen, or the tree and the switcher show canon names.
       await ensurePrimaryMeta();
@@ -352,6 +494,7 @@ export function createWorkspace(ctx, chrome) {
       renderTabs();
       ctx.shell.refreshNames?.();
       state.set({ names: (state.get().names ?? 0) + 1 });
+      loadPack();
     }
 
     const leaves = loaded.map((pane) => buildLeaf(pane, loaded, { book, chapter }));
@@ -383,7 +526,13 @@ export function createWorkspace(ctx, chrome) {
         float.dispose?.();
         const body = h('div', { class: 'leaf-scroll scroll' });
         float.body.replaceChildren(h('div', { class: 'leaf', dataset: { doc: doc.id } }, body));
-        float.dispose = doc.mount(body) ?? null;
+        try {
+          float.dispose = doc.mount(body) ?? null;
+        } catch (err) {
+          float.dispose = null;
+          body.replaceChildren(h('div', { class: 'pane-broken' },
+            h('p', {}, L('msg.paneBroken', { name: doc.title })), h('pre', {}, err.message)));
+        }
         float.mountedDoc = doc.id;
         continue;
       }
@@ -411,17 +560,23 @@ export function createWorkspace(ctx, chrome) {
         onRef: (ref) => state.set({ book: ref.book, chapter: ref.chapter }),
         onVerse: (verse, anchor) => ctx.shell.openVerseBar(anchor, { book, chapter, verse }),
         onStrongs: (code, anchor) => ctx.shell.openStrongs(code, anchor),
+        onRepair: (identify) => ctx.shell.repairTranslation(identify),
       });
 
     const dataset = { pane: pane.index, translation: pane.identify, role: compare ? 'compare' : 'primary' };
     if (float) dataset.float = float;
     return h('div', { class: 'leaf', dataset },
       h('div', { class: 'leaf-head' },
-        compare ? h('div', { class: 'crumbs' }, h('span', { class: 'crumb is-current' }, pane.meta.info.name)) : crumbs(book, chapter),
+        compare
+          ? h('div', { class: 'crumbs' }, h('button', {
+            class: 'crumb crumb-tr', title: `${pane.meta.info.name} — ${L('cmd.translation')}`,
+            onclick: () => ctx.shell.openTranslationPicker(pane.index),
+          }, pane.meta.info.shortname))
+          : crumbs(pane, book, chapter),
         h('button', {
-          class: 'tr-btn', title: L('cmd.translation'), 'aria-label': L('cmd.translation'),
-          onclick: () => ctx.shell.openTranslationPicker(pane.index),
-        }, pane.meta.info.shortname, icon('chev')),
+          class: 'tr-btn', title: L('cmd.translationInfo'), 'aria-label': L('cmd.translationInfo'),
+          onclick: (e) => ctx.shell.openTranslationInfo(e.currentTarget, pane.meta),
+        }, icon('info')),
         !float && compare ? h('button', {
           class: 'leaf-close', title: L('cmd.closeParallel'), 'aria-label': L('cmd.closeParallel'),
           onclick: () => closePane(pane.index),
@@ -566,13 +721,25 @@ export function createWorkspace(ctx, chrome) {
 
   return {
     openChapter, openDoc, closeTab, addPane, closePane, setPaneTranslation, movePane, step, render, openVerse, reveal,
-    newChapterTab,
+    newChapterTab, openTabSwitcher,
     detach, adopt, restore, activate,
     floats,
     panes: () => panesOf(state.get()),
     bookName: bookLabel,
     testamentName: testamentLabel,
+    englishBook,
+    englishTestament,
+    englishRef,
     lang: primaryLang,
+    number: localNumber,
+    setDirection,
+    directionOf,
+    /**
+     * Does the translation in front of the reader carry this book? Before one
+     * is loaded the answer is yes for everything: the canon is what is on
+     * screen, and dimming the whole list while a file loads would be a lie.
+     */
+    hasBook: (book) => !primaryMeta || Boolean(primaryMeta.books[book]),
     primaryName: () => primaryMeta?.info.shortname ?? state.get().translation ?? '–',
     /** Reference resolver of the primary translation, for wikilinks in notes. */
     resolver: () => primaryResolver,

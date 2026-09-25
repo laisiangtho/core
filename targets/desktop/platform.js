@@ -7,10 +7,13 @@ export function createPlatform() {
   if (!bridge) throw new Error('desktop platform: window.lai is missing — the preload script did not run');
   return Object.freeze({
     id: 'desktop',
+    /** 'inset' (macOS traffic lights) or 'overlay' (caption buttons at the end). */
+    frame: bridge.frame ?? null,
     capabilities: Object.freeze({
       saveFile: (options) => bridge.saveFile(options),
       openExternal: (url) => bridge.openExternal(url),
       appInfo: () => bridge.appInfo(),
+      checkUpdate: () => bridge.checkUpdate(),
     }),
   });
 }

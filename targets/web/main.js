@@ -23,15 +23,13 @@ import ink from '../../app/features/ink/index.js';
 import speech from '../../app/features/speech/index.js';
 import verseCard from '../../app/features/verse-card/index.js';
 import help from '../../app/features/help/index.js';
+import updates from '../../app/features/updates/index.js';
 import { createPlatform } from './platform.js';
-import { registerServiceWorker } from './register-sw.js';
 import './theme.css'; // after boot.js so target tokens override the defaults
 
 start({
   root: document.getElementById('app'),
   createPlatform,
-  features: [library, settings, search, notes, bookmarks, composer, notesManager, tags, backlinks, outline, plans, graph, board, ink, speech, verseCard, help],
+  features: [library, settings, search, notes, bookmarks, composer, notesManager, tags, backlinks, outline, plans, graph, board, ink, speech, verseCard, help, updates],
   config: {},
 });
-
-if (import.meta.env.PROD) registerServiceWorker();

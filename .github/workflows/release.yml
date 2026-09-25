@@ -1,0 +1,53 @@
+# Pushing a v-tag publishes the installers and the web build.
+#
+#   node scripts/version.mjs --apply     # stamp yy.mm.dd.build
+#   git commit -am "v26.09.24.3" && git tag v26.09.24.3 && git push --tags
+#
+# The desktop update check reads the release this produces, so the tag must
+# match the stamped version: the check compares tag_name (with any leading "v"
+# removed) against the running application's version.
+name: release
+
+on:
+  push:
+    tags: ['v*']
+
+permissions:
+  contents: write
+
+jobs:
+  installers:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm test
+      # electron-builder publishes to the release for this tag. Signing
+      # certificates are not configured, so macOS and Windows builds are
+      # unsigned and their systems will warn on first run.
+      - run: npx electron-vite build && npx electron-builder --publish always
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  web:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run build
+      - uses: actions/upload-artifact@v4
+        with:
+          name: web
+          path: dist/web

@@ -47,8 +47,11 @@ export default {
       });
       const stamp = new Date().toISOString().slice(0, 10);
       downloadJson(`lai-siangtho-settings-${stamp}.json`, data);
-      shell.notify(`Exported settings, ${data.data.notes.length} notes, ${data.data.marks.length} bookmarks`
-        + ` and ${data.library.translations.length} translation entries`);
+      shell.notify(L('msg.exported', {
+        notes: L('lbl.notesCount', { n: data.data.notes.length }),
+        marks: L('lbl.marks', { n: data.data.marks.length }),
+        n: data.library.translations.length,
+      }));
     }
 
     async function importSettings() {
@@ -63,8 +66,12 @@ export default {
       const installed = new Set((await store.list()).map((t) => t.identify));
       missing = parsed.translations.filter((t) => !installed.has(t.identify));
       importedFrom = { name: file.name, exportedAt: parsed.exportedAt, count: parsed.translations.length, merged };
-      shell.notify(`Imported ${file.name}: ${merged.notes} notes, ${merged.marks} bookmarks`
-        + `${missing.length ? ` — ${missing.length} translations are not installed here` : ''}`);
+      shell.notify(L(missing.length ? 'msg.importedMissing' : 'msg.imported', {
+        file: file.name,
+        notes: L('lbl.notesCount', { n: merged.notes }),
+        marks: L('lbl.marks', { n: merged.marks }),
+        n: missing.length,
+      }));
       refresh();
     }
 
@@ -82,7 +89,9 @@ export default {
       }
       busy = null;
       refresh();
-      shell.notify(missing.length ? `${missing.length} translations could not be installed` : 'All listed translations are installed');
+      shell.notify(missing.length
+        ? L('msg.installedSome', { n: missing.length })
+        : L('msg.installedAll'), missing.length ? 'error' : 'ok');
     }
 
     const guard = (fn) => () => fn().catch((err) => shell.notify(err.message, 'error'));

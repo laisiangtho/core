@@ -118,15 +118,15 @@ export function compareCatalogs(current, candidate) {
  *            state: 'available'|'installed'|'update'|'unlisted' }[]}
  */
 export function translationStatus(catalog, installed) {
-  const local = new Map(installed.map((t) => [t.identify, t.version]));
+  const local = new Map(installed.map((t) => [t.identify, t]));
   const rows = catalog.entries.map((entry) => {
-    const installedVersion = local.has(entry.identify) ? local.get(entry.identify) : null;
+    const held = local.get(entry.identify) ?? null;
     let state = 'available';
-    if (installedVersion !== null) state = entry.version > installedVersion ? 'update' : 'installed';
-    return { identify: entry.identify, entry, installedVersion, state };
+    if (held) state = entry.version > held.version ? 'update' : 'installed';
+    return { identify: entry.identify, entry, installedVersion: held?.version ?? null, held, state };
   });
-  for (const [identify, version] of local) {
-    if (!catalog.get(identify)) rows.push({ identify, entry: null, installedVersion: version, state: 'unlisted' });
+  for (const [identify, held] of local) {
+    if (!catalog.get(identify)) rows.push({ identify, entry: null, installedVersion: held.version, held, state: 'unlisted' });
   }
   return rows;
 }

@@ -570,10 +570,17 @@ body.is-dragging-tab,body.is-dragging-tab *{cursor:grabbing!important}
 .bar-sep{
   flex:0 0 auto;width:1px;height:16px;margin:0 4px;background:var(--border);
 }
-.tabstrip{display:flex;gap:0;flex:1;min-width:0;align-items:flex-end}
+.tabstrip{
+  display:flex;gap:0;flex:1;min-width:0;align-items:flex-end;
+  /* Past a certain number of tabs the strip scrolls rather than squeezing every
+     label down to two letters. Only the horizontal axis moves; the tabs sit on
+     the band's bottom edge and must not be clipped along it. */
+  overflow-x:auto;overflow-y:hidden;scrollbar-width:none;scroll-behavior:smooth;
+}
+.tabstrip::-webkit-scrollbar{height:0}
 .tab{
   position:relative;display:flex;align-items:center;gap:6px;height:var(--tab-h);
-  padding:0 6px 0 11px;z-index:1;min-width:0;flex:1 1 auto;max-width:190px;
+  padding:0 6px 0 11px;z-index:1;flex:1 1 auto;min-width:108px;max-width:190px;
   border:0;border-radius:var(--radius-tab) var(--radius-tab) 0 0;
   color:var(--text-faint);font-size:var(--fs-ui-s);white-space:nowrap;
   transition:background var(--speed),color var(--speed),transform .16s ease;

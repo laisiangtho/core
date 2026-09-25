@@ -24,12 +24,13 @@ import speech from '../../app/features/speech/index.js';
 import verseCard from '../../app/features/verse-card/index.js';
 import help from '../../app/features/help/index.js';
 import exportChapter from '../../app/features/export-chapter/index.js';
+import updates from '../../app/features/updates/index.js';
 import { createPlatform } from './platform.js';
 import './theme.css'; // after boot.js so target tokens override the defaults
 
 start({
   root: document.getElementById('app'),
   createPlatform,
-  features: [library, settings, search, notes, bookmarks, composer, notesManager, tags, backlinks, outline, plans, graph, board, ink, speech, verseCard, help, exportChapter],
+  features: [library, settings, search, notes, bookmarks, composer, notesManager, tags, backlinks, outline, plans, graph, board, ink, speech, verseCard, help, exportChapter, updates],
   config: {},
 });

@@ -17,9 +17,15 @@ Phase 2 of the project. The Phase 1 single-file `index.html` is preserved as git
 | `npm run desktop` | Electron in dev mode (renderer hot reload) |
 | `npm run desktop:build` | Compile main, preload and renderer → `out/` |
 | `npm run desktop:package` | Installers → `release/` (`.dmg`, `.exe`, AppImage) |
-| `npm test` | `node:test` suite (no test framework) |
+| `npm test` | Unit and boundary tests (`node:test`, no framework) — about a second |
+| `npm run test:e2e` | The built web app driven in a browser: build → serve → 15 ordered checks |
+| `npm run test:desktop` | The packaged Electron application, started and inspected |
+| `npm run test:perf` | Timings at full size: three complete Bibles, the longest chapter, a whole-library search |
+| `npm run test:all` | `npm test` then the browser suite |
 | `npm run aliases -- <identify> [--file PATH] [--apply]` | Alias overlay maintenance (dry run by default) |
 | `npm run version:stamp -- --apply` | Stamp today's date and the next build number |
+
+The three test commands beyond `npm test` need a browser driver, which is not a dependency of the project: `npm i --no-save playwright-core` and a Chromium build (or `CHROMIUM_PATH`). Without it they say why and skip. A test that needs the desktop application also needs a display; on a machine without one, `xvfb-run -a node test/e2e/desktop.mjs`.
 
 Node ≥ 20.19. Vite is pinned to 7.x because electron-vite 5 supports Vite 5–7; with Vite 8 the `electron` module gets bundled into the main process instead of being externalized.
 
@@ -167,13 +173,39 @@ The status bar carries the app's mark, the translation, the passage, and the wor
 
 ## Language and script
 
-Every name the reader sees comes from the translation where the translation has one: book names, and testament names too (`ဓမ္မဟောင်းကျမ်း`, `Thuciam Lui`), in the tabs, the breadcrumbs, the books tree and the chapter header. The canon is the fallback, not the first choice.
+Names resolve in one order — **the translation file → the language pack → the canon**. Packs are `lang/iso-{code}.json` from the catalog repository, keyed by ISO 639-3, naming a language's testaments, books, sections and digits; they are fetched once per language and kept, so names never depend on being online. The pack key comes from the translation file, which carries 639-3 in `info.language.name`; the catalog's two-letter codes name no pack.
+
+Every control whose text comes from the translation carries the canon's English name as its `title` and `aria-label` — tabs, breadcrumbs, tree rows, chapter chips, the chapter picker, the status bar. A reader who cannot read the script is never guessing what a click will open.
+
+Every name the reader sees comes from the translation where the translation has one: book names, and testament names too (`ဓမ္မဟောင်းကျမ်း`, `Thuciam Lui`), in the tabs, the breadcrumbs, the books tree and the chapter header.
 
 The reading surface carries the translation's `lang` and `dir`. Translation files name their language by ISO 639-3 (`mya`, `ctd`), so the parser also reads the two-letter code and prefers it — `:lang(my)` does not match `lang="mya"`, and that one mismatch is why Burmese was being set with Latin line spacing.
 
 Burmese needs that room. The script stacks marks above the consonant (ိ ီ ံ), below it (ု ူ) and beside it (ျ ြ ွ ှ), and marks a killed consonant with an asat (်), so a line carries close to twice the ink of a Latin line and collides with its neighbours at 1.5–1.66. It is set at 1.26 × the reader's own line height — a multiple, not a fixed number, so the reading panel still works on it — with a Myanmar face ahead of the reading face. Arabic gets 1.12 × the size and 1.16 × the height. The `lang` attribute also matters for line breaking: Burmese puts no spaces between words, and only the engine's own breaker knows where a line may end.
 
+Numbers that name a chapter — in a tab, a breadcrumb, the books tree, the status bar, the chapter picker — are written in the translation's own digits (`၃`, `၃/၅၀`). Counts stay in the interface's digits: 39 books is a quantity, not a chapter.
+
+Interface text is set at a unitless `line-height: 1.5` so a label's box is a multiple of its font size rather than of the font's own metrics; without that, a Burmese label made its button taller than the Latin one beside it.
+
 Interface strings live in `app/shell/i18n.js` and nowhere else — features included. Labels are named for what they do, not what they point at: "Close", not "Close this tab"; "Bookmark", not "Bookmark this verse". A label that carries a passage into the string ("Note on {ref}") reads badly once translated and is avoided.
+
+## Narrow windows and touch
+
+Under 900 px a sidebar comes in as a drawer over the text with a scrim behind it; under 760 px the status bar gives way to a floating navigation pill, the band carries the app's mark, and the tab strip shows only the active tab — press it for the list of the others. A window grown back to a column layout puts the drawer away.
+
+## When something goes wrong
+
+Nothing is allowed to fail silently, and nothing that can be recovered is left without a way back.
+
+- A feature that cannot register is named in a message; the rest of the application starts. A pane or document that throws on mount shows the reason inside its own body.
+- A full quota says what to do about it. An install is a single transaction, so the copy already held survives a failed one.
+- A chapter missing from a stored copy is told apart from a book the translation never carried: when the translation's own index lists the book, the copy is incomplete and **Download again** repairs it.
+- If the application cannot start at all, the screen offers **Try again** and a two-press **Erase stored data**, saying what erasing costs.
+- The same **Download again** is in the translation information popover, for a file corrected upstream without the catalog's version changing.
+
+## Staying current
+
+The web build downloads a new version and **waits**: the reader is offered *Reload*, and assets from two builds never mix. The desktop build asks the releases API from its main process — so the renderer's `connect-src` stays limited to the catalog host — and offers a link; it downloads nothing by itself. Both check once a day, silently unless there is something to say, and by hand from the command palette.
 
 ## Rules
 

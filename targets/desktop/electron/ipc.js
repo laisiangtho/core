@@ -8,6 +8,9 @@ import { basename } from 'node:path';
 
 import { rendererUrl } from './window.js';
 
+/** Where releases are published; the packaging config points at the same repository. */
+const RELEASES_URL = 'https://api.github.com/repos/laisiangtho/lai-siangtho/releases/latest';
+
 export function registerIpc() {
   handle('lai:save-file', async (event, options) => {
     if (typeof options?.defaultName !== 'string' || typeof options?.content !== 'string') {
@@ -29,6 +32,26 @@ export function registerIpc() {
     await shell.openExternal(u.href);
   });
 
+  /**
+   * Is there a newer release?
+   *
+   * The check runs here rather than in the renderer: the page's content policy
+   * allows the catalog host and nothing else, and widening it for a version
+   * check would be a poor trade. Nothing is downloaded or installed — the
+   * answer is a version and a link, and the reader decides.
+   */
+  handle('lai:check-update', async () => {
+    const current = app.getVersion();
+    const response = await fetch(RELEASES_URL, {
+      headers: { accept: 'application/vnd.github+json', 'user-agent': `${app.getName()}/${current}` },
+    });
+    if (!response.ok) throw new Error(`update check: HTTP ${response.status}`);
+    const release = await response.json();
+    const latest = String(release.tag_name ?? '').replace(/^v/, '');
+    if (!latest) throw new Error('update check: the latest release has no version');
+    return { current, latest, url: release.html_url, newer: isNewer(latest, current) };
+  });
+
   // `runtime` is a display string: shared code prints it without knowing what
   // this target runs on (app/ must stay target-agnostic).
   handle('lai:app-info', () => ({
@@ -37,6 +60,20 @@ export function registerIpc() {
     runtime: `Electron ${process.versions.electron}`,
     platform: process.platform,
   }));
+}
+
+/**
+ * Compare two `yy.mm.dd.build` versions numerically, part by part. String
+ * comparison would call 26.9.24 newer than 26.10.1.
+ */
+function isNewer(latest, current) {
+  const parts = (v) => v.split('.').map((n) => Number.parseInt(n, 10) || 0);
+  const a = parts(latest);
+  const b = parts(current);
+  for (let i = 0; i < Math.max(a.length, b.length); i += 1) {
+    if ((a[i] ?? 0) !== (b[i] ?? 0)) return (a[i] ?? 0) > (b[i] ?? 0);
+  }
+  return false;
 }
 
 function handle(channel, fn) {

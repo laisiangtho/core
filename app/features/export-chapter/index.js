@@ -39,9 +39,9 @@ export default {
             defaultName: `${translation}-${ctx.category.book(book).shortname}-${chapter}.txt`,
             content: lines.join('\n') + '\n',
           });
-          shell.notify(result.saved ? `Saved ${result.path}` : 'Export cancelled');
+          shell.notify(result.saved ? L('msg.saved', { name: result.path }) : L('msg.exportCancelled'));
         } catch (err) {
-          shell.notify(`Export failed: ${err.message}`, 'error');
+          shell.notify(L('msg.exportFailed', { why: err.message }), 'error');
         }
       },
     });

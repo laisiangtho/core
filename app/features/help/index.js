@@ -70,22 +70,9 @@ export default {
         el.append(h('div', { class: 'leaf' }, h('div', { class: 'leaf-scroll scroll' },
           h('div', { class: 'note doc' },
             h('h1', { class: 'inline-title' }, L('doc.help')),
-            h('div', { class: 'note-sub' }, `${L('app.name')} · ${VERSION}`),
             h('p', { class: 'doc-lede' }, L('doc.help.lede')),
-
-            h('div', { class: 'doc-h' }, L('doc.help.start')),
             h('div', { class: 'task-grid' }, cards),
-
-            h('div', { class: 'doc-h' }, L('doc.help.passage')),
-            h('p', { class: 'doc-p' }, L('doc.help.passage1')),
-            h('p', { class: 'doc-p' }, L('doc.help.passage2')),
-
-            h('div', { class: 'doc-h' }, L('doc.help.arrange')),
-            h('p', { class: 'doc-p' }, L('doc.help.arrange1')),
-            h('p', { class: 'doc-p' }, L('doc.help.arrange2')),
-
-            h('div', { class: 'doc-h' }, L('doc.help.data')),
-            h('p', { class: 'doc-p' }, L('doc.help.data1')),
+            h('div', { class: 'doc-h' }, L('doc.help.more')),
             h('div', { class: 'task-grid' },
               task('cmd', L('doc.shortcuts'), L('doc.t.shortcuts'), '', () => shell.openDoc('shortcuts')),
               task('info', L('doc.about'), L('doc.t.about'), '', () => shell.openDoc('about')),
@@ -105,6 +92,7 @@ export default {
         // Gestures and modal keys are not commands, so they are listed by hand;
         // a line that repeats a bound key is dropped rather than shown twice.
         const extras = [
+          { keys: 'Mod+1…9', what: L('cmd.goToTab') },
           { keys: 'Esc', what: L('doc.keys.esc') },
           { keys: 'ArrowUp+ArrowDown', what: L('doc.keys.arrows') },
           { keys: 'Enter', what: L('doc.keys.enter') },
@@ -153,10 +141,8 @@ export default {
           h('h1', { class: 'inline-title' }, L('app.name')),
           h('div', { class: 'note-sub' }, `${VERSION} · ${L('lbl.built', { date: new Date(BUILT_AT).toLocaleDateString() })}`),
           h('p', { class: 'doc-lede' }, L('doc.about.lede')),
-          h('div', { class: 'doc-h' }, L('doc.about.build')),
           facts,
-          h('div', { class: 'doc-h' }, L('doc.about.thanks')),
-          h('p', { class: 'doc-p' }, L('doc.about.sources')));
+          h('p', { class: 'muted' }, L('doc.about.sources')));
         el.append(h('div', { class: 'leaf' }, h('div', { class: 'leaf-scroll scroll' }, body)));
 
         async function paint() {

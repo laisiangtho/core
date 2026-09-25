@@ -1,8 +1,18 @@
 {
   "name": "lai-siangtho",
   "productName": "Lai Siangtho",
-  "version": "26.9.23",
+  "version": "26.9.24",
   "description": "Bible reading and study — web (PWA) and desktop (Electron) from one codebase",
+  "author": {
+    "name": "Lai Siangtho"
+  },
+  "license": "UNLICENSED",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/laisiangtho/lai-siangtho.git"
+  },
+  "homepage": "https://github.com/laisiangtho/lai-siangtho",
+  "desktopName": "org.laisiangtho.app.desktop",
   "private": true,
   "type": "module",
   "main": "out/main/index.js",
@@ -16,7 +26,11 @@
     "desktop": "electron-vite dev",
     "desktop:build": "electron-vite build",
     "desktop:package": "electron-vite build && electron-builder",
-    "test": "node --test",
+    "test": "node --test \"test/*.test.js\" \"test/core/*.test.js\"",
+    "test:e2e": "npm run build && node --test test/e2e/app.test.mjs",
+    "test:perf": "npm run build && node test/e2e/perf.mjs",
+    "test:desktop": "npm run desktop:build && node test/e2e/desktop.mjs",
+    "test:all": "npm test && npm run test:e2e",
     "aliases": "node scripts/aliases.mjs",
     "version:stamp": "node scripts/version.mjs"
   },

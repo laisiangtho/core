@@ -22,6 +22,11 @@ self.addEventListener('activate', (event) => {
   })());
 });
 
+// The page asks for the new version only when the reader agrees to it.
+self.addEventListener('message', (event) => {
+  if (event.data?.type === 'take-over') self.skipWaiting();
+});
+
 self.addEventListener('fetch', (event) => {
   const { request } = event;
   if (request.method !== 'GET') return;

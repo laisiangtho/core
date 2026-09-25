@@ -5,9 +5,15 @@
  */
 import { contextBridge, ipcRenderer } from 'electron';
 
+// Which window chrome the main process asked for, so the top band can leave
+// room where the system's own buttons are drawn (see electron/window.js).
+const FRAME = { darwin: 'inset', win32: 'overlay' }[process.platform] ?? null;
+
 contextBridge.exposeInMainWorld('lai', Object.freeze({
+  frame: FRAME,
   /** @param {{ defaultName: string, content: string }} options */
   saveFile: (options) => ipcRenderer.invoke('lai:save-file', options),
   openExternal: (url) => ipcRenderer.invoke('lai:open-external', url),
   appInfo: () => ipcRenderer.invoke('lai:app-info'),
+  checkUpdate: () => ipcRenderer.invoke('lai:check-update'),
 }));

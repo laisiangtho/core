@@ -4,53 +4,114 @@
  */
 
 import { formatBytes, h } from '../../shell/dom.js';
+import { icon } from '../../shell/icons.js';
 import { L } from '../../shell/i18n.js';
-import { storageStatus } from '../../services/store.js';
+import { requestPersistence, storageStatus } from '../../services/store.js';
+
+/** How the list is arranged. The choice is remembered. */
+const VIEWS = Object.freeze(['language', 'all', 'offline']);
+const KEY = 'library';
 
 export default {
   id: 'library',
   setup(ctx) {
-    const { library, registry, shell } = ctx;
+    const { library, records, registry, shell } = ctx;
     const progress = new Map(); // identify -> text
+    let query = '';
+    const held = records.get(KEY, null);
+    let view = VIEWS.includes(held?.view) ? held.view : VIEWS[0];
+    const setView = (next) => {
+      view = next;
+      records.save(KEY, { view: next }).catch(() => { /* a view is not worth a toast */ });
+    };
 
     async function check() {
       try {
         const { changed } = await library.checkForUpdates({ force: true });
-        shell.notify(changed ? 'Catalog updated' : 'Catalog is up to date');
+        shell.notify(L(changed ? 'lib.catalogChanged' : 'lib.catalogSame'));
       } catch (err) {
-        shell.notify(`Catalog check failed: ${err.message}`, 'error');
+        shell.notify(L('lib.catalogFailed', { why: err.message }), 'error');
       }
     }
 
+    /**
+     * Ask the browser to keep what is stored when space runs short. It may
+     * agree, refuse, or ask the reader; whichever it does is reported.
+     */
+    async function keep() {
+      const granted = await requestPersistence();
+      shell.notify(L(granted ? 'lib.kept' : 'lib.notKept'), granted ? 'ok' : 'info');
+    }
+
     async function act(identify, action) {
-      progress.set(identify, action === 'remove' ? 'Removing…' : 'Starting…');
+      // The reader knows the translation by its name, not by the file it is in.
+      const name = library.catalog?.get(identify)?.name ?? identify;
+      progress.set(identify, L(action === 'remove' ? 'lib.removing' : 'lib.starting'));
       try {
         if (action === 'remove') {
           await library.remove(identify);
-          shell.notify(`${identify} removed`);
+          shell.notify(L('lib.removed', { name }));
         } else {
           const result = await library.install(identify);
-          const notes = [];
-          if (result.diagnostics.length) notes.push(`${result.diagnostics.length} versification differences`);
-          if (result.versionMismatch) notes.push(`catalog lists v${result.versionMismatch.catalog}, file is v${result.versionMismatch.file}`);
-          shell.notify(`${identify} v${result.version} available offline${notes.length ? ` (${notes.join('; ')})` : ''}`);
+          // Only what a reader can act on: a catalog that disagrees with the
+          // file. How the file differs from the canon belongs with the
+          // translation itself, not in a message that disappears.
+          const notes = result.versionMismatch
+            ? L('lib.versionMismatch', { catalog: result.versionMismatch.catalog, file: result.versionMismatch.file })
+            : '';
+          shell.notify(notes ? L('lib.installedNoted', { name, notes }) : L('lib.installed', { name }), 'ok');
         }
       } catch (err) {
-        shell.notify(`${identify}: ${err.message}`, 'error');
+        shell.notify(`${name}: ${err.message}`, 'error');
       } finally {
         progress.delete(identify);
       }
     }
 
+    /**
+     * The languages this device asks for, most wanted first, as two-letter
+     * codes: what the reader is most likely to want to read.
+     */
+    const wanted = (typeof navigator === 'undefined' ? [] : navigator.languages ?? [navigator.language])
+      .filter(Boolean).map((tag) => String(tag).toLowerCase().split('-')[0]);
+    const suggested = (row) => {
+      const code = String(row.entry?.language.name ?? '').toLowerCase().split('-')[0];
+      return Boolean(code) && wanted.includes(code);
+    };
+
+    // A reader with nothing installed cannot read anything, so the first run
+    // opens here rather than on an empty workspace.
+    ctx.shell.whenReady(async () => {
+      const installed = await ctx.store.list();
+      if (installed.length) return;
+      ctx.shell.openDoc('library');
+    });
+
     registry.command({ id: 'library.check', title: L('cmd.checkUpdates'), icon: 'download', run: check });
-    registry.command({ id: 'library.open', title: L('doc.library'), icon: 'download', ribbon: true, run: () => ctx.shell.openDoc('library') });
+    registry.command({ id: 'library.open', title: L('doc.library'), icon: 'library', ribbon: true, run: () => ctx.shell.openDoc('library') });
 
     registry.doc({
       id: 'library',
       title: L('doc.library'),
-      icon: 'download',
+      icon: 'library',
       mount(el) {
         let disposed = false;
+        const run = () => render().catch((err) => shell.notify(err.message, 'error'));
+
+        const filter = h('input', {
+          type: 'search', spellcheck: 'false', value: query,
+          placeholder: L('lib.filter'), 'aria-label': L('lib.filter'),
+          oninput: (e) => { query = e.currentTarget.value; run(); },
+        });
+
+        /** Name, abbreviation, language or identify — whatever the reader types. */
+        function matches(row) {
+          const q = query.trim().toLowerCase();
+          if (!q) return true;
+          const e = row.entry;
+          return [row.identify, e?.name, e?.shortname, e?.language.text, e?.publisher, e?.year]
+            .filter(Boolean).join(' ').toLowerCase().includes(q);
+        }
 
         async function render() {
           const [rows, storage] = await Promise.all([library.status(), storageStatus()]);
@@ -64,24 +125,52 @@ export default {
               checked: new Date(library.fetchedAt).toLocaleString(),
             });
 
+          const mode = view;
+          const shown = rows.filter(matches).filter((row) => mode !== 'offline' || row.state !== 'available');
+          const byName = (a, b) => (a.entry?.name ?? a.identify).localeCompare(b.entry?.name ?? b.identify);
+
           const groups = new Map();
-          for (const row of rows) {
-            const lang = row.entry?.language.text ?? L('lib.unlistedGroup');
-            if (!groups.has(lang)) groups.set(lang, []);
-            groups.get(lang).push(row);
+          if (mode === 'language') {
+            for (const row of shown) {
+              const lang = row.entry?.language.text ?? L('lib.unlistedGroup');
+              if (!groups.has(lang)) groups.set(lang, []);
+              groups.get(lang).push(row);
+            }
+          } else {
+            groups.set('', [...shown].sort(byName));
           }
+          // The reader's own languages come first, whatever the arrangement.
+          const ordered = [...groups.entries()].sort(([a, listA], [b, listB]) => {
+            const mine = (list) => (list.some(suggested) ? 0 : 1);
+            return mine(listA) - mine(listB) || a.localeCompare(b);
+          });
+
+          const views = h('div', { class: 'rp-seg lib-views' }, VIEWS.map((id) => h('button', {
+            'aria-pressed': String(id === mode),
+            onclick: () => { setView(id); run(); },
+          }, L(`lib.view.${id}`))));
 
           el.replaceChildren(
             h('section', { class: 'doc library' },
               h('header', { class: 'doc-head' },
                 h('h1', { class: 'inline-title' }, L('doc.library')),
-                h('p', { class: 'muted' }, header),
-                h('p', { class: 'muted' }, L('lib.storageUsed', { size: formatBytes(storage.usage) })
-                  + (storage.persisted === false ? ` · ${L('lib.notPersistent')}` : '')),
-                h('button', { class: 'btn primary', onclick: check }, L('cmd.checkUpdates'))),
-              [...groups.entries()].sort(([a], [b]) => a.localeCompare(b)).map(([lang, list]) => h('div', { class: 'library-group' },
-                h('h2', {}, lang),
-                h('ul', { class: 'library-list' }, list.map((row) => item(row)))))));
+                h('p', { class: 'muted' },
+                  `${header} · ${L('lib.storageUsed', { size: formatBytes(storage.usage) })}`,
+                  storage.persisted === false
+                    ? [' · ', L('lib.notPersistent'), ' ',
+                      h('button', { class: 'link-btn', onclick: () => keep().then(run) }, L('lib.keep'))]
+                    : null),
+                h('div', { class: 'lib-tools' },
+                  h('div', { class: 'field' }, icon('search'), filter),
+                  views,
+                  h('span', { class: 'grow' }),
+                  h('span', { class: 'muted lib-count' }, L('lib.count', { n: shown.length })),
+                  h('button', { class: 'btn', onclick: check }, icon('undo'), L('cmd.checkUpdates')))),
+              shown.length
+                ? ordered.map(([lang, list]) => h('div', { class: 'library-group' },
+                  lang ? h('h2', {}, lang) : null,
+                  h('ul', { class: 'library-list' }, list.map((row) => item(row)))))
+                : h('p', { class: 'empty-hint' }, L('lib.noHits', { query: query.trim() }))));
         }
 
         function item(row) {
@@ -98,7 +187,10 @@ export default {
               h('strong', {}, e ? `${e.shortname} · ${e.name}` : row.identify),
               h('span', { class: 'muted' }, e ? [e.year, e.publisher].filter(Boolean).join(' · ') : L('lib.unlisted')),
               row.state === 'update' ? h('span', { class: 'badge' }, `v${row.installedVersion} → v${e.version}`) : null,
-              row.state === 'installed' ? h('span', { class: 'badge badge-ok' }, L('lib.offline')) : null),
+              row.state === 'installed' ? h('span', { class: 'badge badge-ok' }, L('lib.offline')) : null,
+              // What is actually on the device, for a row that has something on it.
+              row.held ? h('span', { class: 'muted lib-held' }, held(row.held)) : null,
+              row.state === 'available' && suggested(row) ? h('span', { class: 'badge badge-hint' }, L('lib.suggested')) : null),
             h('div', { class: 'library-actions' }, busy
               ? h('span', { class: 'muted' }, busy)
               : actions.map(([label, action]) => h('button', {
@@ -106,13 +198,22 @@ export default {
               }, label))));
         }
 
-        const offChange = library.on('change', render);
+        /** The stored copy in one line: how big it is, and whether it holds the whole canon. */
+        function held(record) {
+          return [
+            record.bytes ? formatBytes(record.bytes) : null,
+            record.stats ? L('lbl.books', { n: record.stats.books }) : null,
+            record.diagnostics?.total ? L('lbl.differs', { n: record.diagnostics.total }) : null,
+          ].filter(Boolean).join(' · ');
+        }
+
+        const offChange = library.on('change', run);
         const offProgress = library.on('progress', ({ detail }) => {
           const phase = { download: L('lib.downloading'), validate: L('lib.validating'), write: L('lib.saving') }[detail.phase];
           progress.set(detail.identify, detail.received ? `${phase} ${formatBytes(detail.received)}` : `${phase}…`);
-          render();
+          run();
         });
-        render().catch((err) => shell.notify(err.message, 'error'));
+        run();
         return () => { disposed = true; offChange(); offProgress(); };
       },
     });

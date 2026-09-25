@@ -24,7 +24,8 @@ const LAYOUT_CLASS = { paragraph: '', list: 'list', continuous: 'flow' };
  *           book: number, chapter: number, compare: boolean, layout: string,
  *           annotations?: { notes: Map<number, number>, marks: Map<number, object> },
  *           strongs?: boolean, onStrongs?: Function,
- *           primaryVerses?: object|null, onRef: Function, onVerse?: Function }} p
+ *           primaryVerses?: object|null, onRef: Function, onVerse?: Function,
+ *           onRepair?: (identify: string) => void }} p
  * @returns {HTMLElement} .note
  */
 export function chapterNote(p) {
@@ -56,9 +57,20 @@ export function chapterNote(p) {
         h('div', { class: 'note-sub' }, sub))));
 
   if (!verses) {
+    // Two different things look alike here. A translation that never carried
+    // the book is complete and correct; a translation whose own index lists the
+    // book but whose text is not in storage was written half-way, and the
+    // remedy for that is another download — so they are not worded the same.
+    const damaged = Boolean(localBook);
     note.append(h('div', { class: 'callout' },
-      h('div', { class: 'co-title' }, icon('alert'), h('span', {}, L('ch.noText', { tr: meta.info.shortname }))),
-      localBook ? L('ch.missingBook', { name: canon.name }) : L('ch.missingBook', { name: canon.name })));
+      h('div', { class: 'co-title' }, icon('alert'),
+        h('span', {}, damaged ? L('ch.incomplete') : L('ch.noText', { tr: meta.info.shortname }))),
+      h('p', {}, damaged
+        ? L('ch.incompleteWhy', { tr: meta.info.name })
+        : L('ch.missingBook', { name: canon.name })),
+      damaged && p.onRepair
+        ? h('button', { class: 'btn', onclick: () => p.onRepair(meta.identify) }, icon('undo'), L('cmd.refreshTranslation'))
+        : null));
     return note;
   }
 

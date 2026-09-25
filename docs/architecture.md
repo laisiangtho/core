@@ -59,6 +59,36 @@ Measured on tedim1932, niv2011, judson1835, ddb1931, bbe1949, jwmynwt, mizo1917;
 
 ---
 
+## 1b. Language packs
+
+`lang/iso-{code}.json` in the catalog repository names one language's
+testaments, books (84, deuterocanon included), sections and digits, and carries
+a `locale` block of interface strings. Packs are keyed by **ISO 639-3**.
+
+The two-vs-three character problem solves itself: `book.json` uses 639-1
+(`da`, `my`), but the translation files carry 639-3 in `info.language.name`
+(`dan`, `mya`, `ctd`), so the pack key comes from the translation and no
+mapping table is needed. A two-letter code names no pack and is not requested.
+
+Every name the reader sees resolves in one order:
+
+```
+the translation file  →  the language pack  →  category.json (the canon, English)
+```
+
+The translation wins because it is the edition in front of the reader; the pack
+fills in what that file omits; the canon is the last resort — and, being always
+English, is also what every localised control offers as its accessible name.
+
+Packs are cached in the records store (`lang:{code}`) and read from there on
+later runs, so names never depend on being online; a cached pack older than 30
+days is used immediately and re-fetched in the background. A missing pack is
+normal, not a failure.
+
+`locale` is not wired yet: those keys are the upstream app's, not this one's.
+It is the obvious path to a translated interface, and the reason to keep the
+pack service rather than inline the names.
+
 ## 2. Cross-reference resolution
 
 - Translation files are **not** edited (a content change forces every consuming application to treat the file as modified).
@@ -85,7 +115,8 @@ Measured on tedim1932, niv2011, judson1835, ddb1931, bbe1949, jwmynwt, mizo1917;
 
 Layout:
 
-- Store `translations`: key `identify` → `{ info, note, digit, language, testament, story, books: {id → info}, version, installedAt, bytes }`.
+- Store `translations`: key `identify` → `{ info, note, digit, language, testament, story, books: {id → info}, version, installedAt, bytes, stats, diagnostics }`.
+  `stats` is what the file holds (books, chapters, verses, merges, titles, refs); `diagnostics` is `{ total, items }` — where the file departs from the canon, capped at 400 entries so a translation missing most of the canon cannot bloat the record. Both are shown in the translation information popover and summarised on the library row, and the whole report can be saved as JSON.
 - Store `settings`: key `'current'` → the persisted settings (see 3b).
 - Store `chapters`: key `[identify, book, chapter]` → verses as published, normalised only where the data is inconsistent (empty optional strings removed, `merge` stored as a number).
 - Install / update: a worker fetches, validates, splits and writes everything in **one readwrite transaction**; the previous copy remains until the new one commits.
@@ -137,6 +168,17 @@ which maps them to one row per side and drops keys this build no longer has,
 reporting what it dropped. Imported files stay strict — they carry a schema
 number and are someone else's data.
 
+### 3b-ii. Narrow and touch layout
+
+The stylesheet carried Phase 1's responsive rules from the start; this wires
+them. At ≤900 px a sidebar arrives as a drawer over the text, with a scrim and
+`body.drawer-l` / `drawer-r` / `has-drawer`; one at a time, and a window grown
+back to a column layout closes whichever was open. At ≤760 px the status bar
+gives way to a floating navigation pill (drawers, previous, next, palette), the
+band carries the app pill, and the tab strip shows only the active tab — which
+is why that tab carries a chevron: pressing it opens the tab switcher, the
+modal listing every open tab plus "new" and "close".
+
 ### 3c-i. Feature records
 
 Settings has a fixed schema, validated key by key; reading-plan progress, the study board and ink strokes do not fit it and are far larger. They live in IndexedDB v4 store `records` (key: the feature's name → its document), behind `services/records.js`: loaded once at startup, written through on change, carried in the export under `data.records`. Each feature owns exactly one key and is its only writer, so no two features can fight over a record.
@@ -162,9 +204,15 @@ Settings has a fixed schema, validated key by key; reading-plan progress, the st
 - **Source mode** (`core/source.js`) renders the chapter as Markdown and accepts edits only under `## Notes`; the scripture section is compared on save and a change is refused. Verse notes are `- **17** text`, the chapter note is loose text.
 - **Strong's** (`core/strongs.js`) reads `{H7225}`, `<S>430</S>` and `[H430]`, attaching each code to the preceding word. No published translation carries the markup today, so the toggle reports that rather than appearing to do nothing. The regex is built per call — a shared `/g` regex carries `lastIndex` between `test()` and `matchAll()`, which silently skipped the first match until a test caught it.
 - **Typography**: text size, line height and line length are CSS variables set from settings by the reading panel — on the **root element**, not the body. The ramp derives `--fs-text` from `--reading-size` at `:root`, and a custom property is resolved where it is declared, so setting them on the body moved every number in the panel while the text never changed.
+- **Interface line height**: `body { line-height: 1.5 }`, unitless. With `line-height: normal` the line box comes from the font's own ascent and descent, and the Myanmar faces ask for close to twice the Latin metrics, so a button with a Burmese label grew taller than the same button in Latin. Unitless (not `1.5em` or `150%`) because a length inherits as a fixed number of pixels, which would give nested text at another size the wrong leading. Labels clipped to one line take `padding-block: 3px; margin-block: -3px` — ink room that costs no layout height.
+- **Digits**: a number that names a chapter is written in the primary translation's own digits (`localizeNumber`) wherever it appears — tabs, breadcrumbs, the books tree, the status bar, the breadcrumb picker. A count (39 books, 30 verses) is a quantity and stays in the interface's digits.
 - **Script typography**: the reading surface carries `lang` and `dir` from the translation. Files name their language by ISO 639-3 (`mya`, `ctd`), so the parser also reads `info.language.iso["639-1"]` and prefers it — `:lang(my)` never matches `lang="mya"`, which is why Burmese was rendering with Latin line spacing. Burmese stacks marks above the consonant, below it and beside it, and marks a killed consonant with an asat, so a line carries roughly twice the ink of a Latin one: it gets `calc(var(--lh-text) * 1.26)` — a multiple of the reader's own setting rather than a fixed number, so the reading panel still moves it — plus a Myanmar face stack. Arabic gets 1.12× the size and 1.16× the height. The language also reaches the element because the browser's own line breaker needs it: Burmese writes without spaces between words.
+- **English behind every localised control**: any control whose visible text comes from the translation — tabs, breadcrumbs, the books tree, chapter chips, the chapter picker, the status bar's passage — carries the canon's English name as `title` and `aria-label`. A reader who cannot read the script can still tell what a click will open, and a screen reader announces something it can pronounce.
+- **The crumb bar** reads translation ▸ testament ▸ book ▸ chapter, and ends with one button: what this translation is (description, language, publisher, copyright, the version held against the version listed, install date and size), and from there "Download again" — because a translation file can be corrected upstream without the catalog's version changing, and an installed copy would otherwise never hear about it. A copyright line pinned above the text is read once and then read past forever, while costing a strip of every chapter; behind a button it is one press from the text it describes and absent the rest of the time.
 - **Names in the reader's language**: book names, and now testament names, come from the translation (`meta.testament[id].info.name`) wherever they are shown — tabs, breadcrumbs, the books tree, the chapter header — with the canon as fallback. Chrome that carries such a name is tagged with the script's language so it gets the same line room.
 - **Chapter-only controls**: a command may declare `needsChapter`. While a document tab is active, `body[data-tab="doc"]` is set and those buttons are shown but not pressable — the nav arrows, the parallel-pane button, layout, source mode, Strong's, synchronised scrolling, ink, read aloud, verse card and chapter export — rather than failing when pressed.
+- **An empty sidebar** keeps its place in the document: while a pane is being dragged it shows a rail to drop onto, and a pane dropped there opens that sidebar. Without it, the last pane moved out of a sidebar could never be moved back.
+- **The Library** filters on name, abbreviation, language, publisher or year, and arranges itself by language, as one flat list, or as the offline set only; the choice is remembered.
 - **Detached windows** remember the size and position they were last left at (records key `floats`), offset so a second window does not hide the first and clamped into the window as it is now.
 - **Resize handles** draw no grip in any state: the grip's percentage offset resolved differently while a drag was running, which put a mark at the top of the window. The moving edge and the cursor are the feedback.
 - **The status bar** reports what is being read — translation, passage, word count and verse count for the chapter on screen — and on the right the state the reader can click, ending with storage use (`navigator.storage.estimate()`), whose tooltip names the quota and whether the origin is persisted. Counts are measured from the chapter records actually in view, so they describe what is in front of the reader.
@@ -209,16 +257,21 @@ app/                      shared UI — never imports from targets/
                           dragdrop, markdown, tree, modal, theme, i18n, icons, dom
   features/               library, settings, search, notes, bookmarks, composer,
                           notes-manager, tags, backlinks, outline, plans, graph,
-                          board, ink, speech, verse-card, export-chapter
+                          board, ink, speech, verse-card, help, updates,
+                          export-chapter
   styles/                 shell.css (Phase 1 design system), views.css
 targets/
   csp.js                  production Content-Security-Policy
   web/                    index.html, main.js, platform.js, theme.css, manifest, sw.js, shell-plugin.js
-  desktop/                index.html, main.js, platform.js, theme.css, preload.js, electron/
+  desktop/                index.html, main.js, platform.js, theme.css, preload.js,
+                          electron/ (index, window, state, protocol, ipc)
 public/                   category.json, book.json, icons
 assets/                   desktop packaging icon
-scripts/aliases.mjs
+scripts/aliases.mjs  scripts/version.mjs
 test/                     unit + boundary tests, fixtures
+  e2e/                    harness.mjs (server, browser, fixtures), app.test.mjs,
+                          perf.mjs (measurements), desktop.mjs (packaged app)
+.github/workflows/        check.yml on every push, release.yml on a v-tag
 ```
 
 Toolchain: Vite 7 (electron-vite 5 supports Vite 5–7), electron-vite 5, Electron 44, electron-builder 26. No runtime dependencies.
@@ -316,13 +369,85 @@ All three are git-ignored.
 
 ## 9. Security (desktop)
 
-- Renderer: `contextIsolation`, `sandbox`, no `nodeIntegration`; preload exposes only `saveFile`, `openExternal`, `appInfo`.
+- Renderer: `contextIsolation`, `sandbox`, no `nodeIntegration`; preload exposes only `saveFile`, `openExternal`, `appInfo`, `checkUpdate` and the window-frame hint.
 - IPC handlers reject senders whose frame origin is not the app's; inputs are validated; `openExternal` accepts `https:` only.
 - `app://` handler normalises paths and refuses anything outside `out/renderer/` (traversal requests return 404/403).
 - Navigation away from the app origin is blocked; `window.open` to `https:` opens in the system browser.
 - Production CSP on both targets: scripts and styles from `'self'`; `connect-src` limited to `'self'` and `https://raw.githubusercontent.com`.
 
+---
+
+## 9b. Failure states and recovery
+
+Every failure has a named cause and, where one exists, an action.
+
+| What fails | What the reader gets |
+|---|---|
+| A feature throws while registering | The other features start; one message names the feature and the reason. Reading is never lost to a study tool. |
+| A pane or document throws on mount | The error is rendered inside that pane's own body; the rest of the chrome is untouched. |
+| Storage is full (`QuotaExceededError`) | A message naming the remedy (remove a translation, free space) instead of the browser's wording. Install is one transaction, so the previous copy survives. |
+| Another window upgrades the database | `onversionchange` closes the connection and reports it once, rather than letting every later write fail on its own. |
+| An upgrade is blocked by an older window | The open is refused with a message naming the cause. |
+| The application cannot start at all | A screen with the message, **Try again**, and a two-press **Erase stored data** (`indexedDB.deleteDatabase`), with what erasing costs stated. |
+| A chapter is missing from a stored copy | Told apart from a translation that omits the book: when the translation's own index lists the book, the copy is incomplete, and **Download again** repairs it in place. |
+
+`shell.repairTranslation(identify)` is the single repair path, shared by that callout and the translation information popover. It reinstalls over the held copy; a failed attempt leaves what is stored alone.
+
+---
+
+## 9c. Keeping the application current
+
+Neither target downloads anything without being asked. The mechanism differs and `app/features/updates/` knows neither: both arrive as platform capabilities, and a target with neither gets no command.
+
+| Target | Capability | Behaviour |
+|---|---|---|
+| Web | `updates` (`targets/web/register-sw.js`) | A new service worker installs and **waits**. The reader is offered *Reload*; `apply()` posts `take-over`, the worker calls `skipWaiting()`, and the one `controllerchange` reloads the page. Assets from two builds never mix. |
+| Web | `install` | The browser's own install offer, held until the reader asks for it, rather than shown as a banner. |
+| Desktop | `checkUpdate` | The **main process** queries the releases API and returns `{ current, latest, url, newer }`; versions are compared part by part, so `26.10.1` is newer than `26.9.24`. Nothing is downloaded or installed — the reader gets a link. |
+
+The check runs at most once a day, silently unless there is something to say, and by hand from the palette. Running it in the main process keeps `connect-src` on the renderer limited to the catalog host.
+
+---
+
+## 9d. Distribution
+
+- `electron-builder.yml` publishes to the same repository the desktop update check reads; the tag (`v26.09.24.3`) must match the stamped version, minus the `v`.
+- Targets: AppImage, NSIS, dmg + zip. `.deb` and `.rpm` are left out because they require a maintainer address in metadata that ships with every copy.
+- Window chrome: the system title bar is hidden only where the system still draws its own buttons — `hiddenInset` on macOS, `titleBarOverlay` on Windows. Linux keeps its title bar; the overlay is not drawn there, and a window with no close button is worse than an extra row. The renderer is told which arrangement it got (`platform.frame`) and reserves the corner.
+- Window size, position and maximised state are kept in `userData/window.json`, outside the reader's library: they belong to this installation on this machine, and they are needed before the renderer exists. A position on a display that is no longer attached is discarded.
+- `.github/workflows/check.yml` runs the unit tests, the browser suite and the packaged desktop app on every push; `release.yml` builds and publishes installers on a `v*` tag.
+
+---
+
 ## 10. Verification performed
+
+Everything below was run by hand during development. What is worth keeping now lives in `test/`, so it runs again on every change:
+
+| Command | What it covers | Cost |
+|---|---|---|
+| `npm test` | 68 unit and boundary tests — parsers, alignment, references, settings, language packs, registry, and the rules that keep `app/` target-agnostic | ~1 s |
+| `npm run test:e2e` | 15 ordered checks against the real `dist/web` build in a browser, with the catalog repository answered from generated fixtures: first run, install and read, the reading panel, parallel alignment, three-source names with the canon as the accessible name, language packs fetched once and cached, marks surviving a translation switch, tab reorder and detach leaving nothing behind, sidebar rows and the empty-sidebar rail, search, the narrow layout, reload persistence, the install report, and a damaged copy repairing itself. It ends by asserting that nothing was logged and nothing 404'd but the language pack the fixtures deliberately omit | ~80 s |
+| `npm run test:desktop` | The packaged Electron application started under a display: the `app://` protocol, the preload bridge, the shell rendering, and a clean console | ~10 s |
+| `npm run test:perf` | Measurements at full size (below) | ~30 s |
+
+The browser driver (`playwright-core` and a Chromium build) is the one thing the unit tests do not need, so it is optional: the suites report why they cannot run and skip rather than fail.
+
+### Measured at full size
+
+Three complete Bibles — the canon's real chapter and verse counts, verses of realistic length — on one machine, so the numbers are for comparison over time rather than a promise:
+
+| | |
+|---|---|
+| install a 4.0 MB translation | 510 ms |
+| install a 10.1 MB translation (Burmese, UTF-8) | 1,178 ms |
+| open Psalm 119 (176 verses) | 361 ms |
+| next chapter | 63 ms |
+| three parallel panes over Psalm 119 | 174 ms |
+| scroll that to the end | 426 ms |
+| search 93,000 verses across all three | 2,898 ms (results stream as they are found) |
+| reload with everything open | 516 ms |
+
+### Earlier, by hand
 
 - `node --test`: 61 tests (parsers, alignment, references, settings, registry, boundaries).
 - Web build in Chromium: catalog check against remote shape, install of three translations through the worker, reader with story headings / titles / merged labels / cross-reference navigation, parallel alignment, command palette, reload persistence, offline reload through the service worker; no console errors.
@@ -337,4 +462,7 @@ All three are git-ignored.
 - Status bar, help and pickers in Chromium: word and verse counts for the chapter in view (787 words, 30 verses), storage readout with quota and eviction state in its tooltip, Help with 11 task cards, Shortcuts generated from the registry with its filter, About reporting the build and what is stored, the breadcrumb picker listing 39 books then 40 chapters and navigating, scroll fades setting their variables, and the accent picker surviving a reload.
 - Typography and script in Chromium: the reading panel's stepper, slider and number field each move the rendered text (the variables had been landing on the body, where the ramp could not see them); a Burmese translation renders at `lang="my"` with a Myanmar face and 1.26× the reader's line height, and the reading panel still moves that; testament names, book names, tabs, breadcrumbs and the books tree all read in the translation's language.
 - Chrome states in Chromium: on a document tab, four status-bar controls and the chapter-only ribbon buttons are disabled and `body[data-tab]` reads `doc`; a detached window resized to 540×440 reopened at 540×440, and again at 540×440 after a reload.
+- Script and chrome in Chromium: with a Burmese translation primary, tab 30 px, breadcrumb 22 px and tree row 26 px — the same as in Latin — with chapter numbers in Burmese digits (`၃`, `၃/၅၀`) in the tabs, breadcrumbs, tree and picker.
+- Library, sidebars and narrow layout in Chromium: filter (64 → 11 translations), the three views, the offline view; a sidebar emptied of every pane showing a 132 px drop rail mid-drag and taking a pane back; at 720 px the navigation pill, the app pill, a single visible tab with its switcher (5 entries), the left drawer opening and the scrim closing it, and the drawer released on the way back to a wide window.
+- Language packs in Chromium: with the Danish and Burmese translations installed, one request per language (`dan`, `mya`), both cached under `lang:` and none re-requested after a reload; `Danske / Det Gamle Testamente / Første Mosebog / 20` and `ယုဒသန် / ဓမ္မဟောင်းကျမ်း / ကမ္ဘာဦးကျမ်း / ၂၀` in the crumb bar, each crumb carrying `Old Testament`, `Genesis`, `Genesis 20` as its accessible name, and the same on tabs, tree rows and chapter chips.
 - Desktop build in Electron 44 (Xvfb): `app://lai` origin, bridge present, no Node in renderer, desktop theme applied, install, export through a stubbed save dialog, path traversal refused, and every ported pane and verse action present.

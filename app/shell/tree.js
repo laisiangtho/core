@@ -17,6 +17,13 @@ export function createTree(ctx, { onOpen }) {
   let names = {
     testament: (id) => ctx.category.testaments.find((t) => t.id === id)?.name ?? '',
     lang: () => '',
+    number: (n) => String(n),
+    // The canon's English name, for a label the reader may not be able to read.
+    english: (id) => ctx.category.book(id).name,
+    englishTestament: (id) => ctx.category.testaments.find((t) => t.id === id)?.name ?? '',
+    englishRef: (book, chapter) => `${ctx.category.book(book).name} ${chapter}`,
+    // Whether the translation being read carries the book at all.
+    has: () => true,
   };
 
   const element = h('div', { class: 'files-pane' },
@@ -41,6 +48,7 @@ export function createTree(ctx, { onOpen }) {
       return h('div', { class: `tree-item${isOpen ? ' is-open' : ''}` },
         h('div', {
           class: 'tree-row', role: 'button', tabindex: '0',
+          title: names.englishTestament(t.id), 'aria-label': names.englishTestament(t.id),
           onclick: () => { toggle(key); paint(); },
         },
           h('span', { class: 'twisty' }, icon('chev')),
@@ -54,18 +62,29 @@ export function createTree(ctx, { onOpen }) {
     const key = `b${b.id}`;
     const isCurrent = b.id === currentBook;
     const isOpen = open.has(key) || (isCurrent && !query);
-    return h('div', { class: `tree-item is-book${isOpen ? ' is-open' : ''}${isCurrent ? ' is-current' : ''}` },
+    // A book this translation does not carry is still listed — it is part of
+    // the canon, and another translation may have it — but it is marked, so a
+    // reader learns that from the list rather than from an empty chapter.
+    const absent = !names.has(b.id);
+    const label = absent ? `${names.english(b.id)} — ${L('lbl.notInTranslation')}` : names.english(b.id);
+    return h('div', { class: `tree-item is-book${isOpen ? ' is-open' : ''}${isCurrent ? ' is-current' : ''}${absent ? ' is-absent' : ''}` },
       h('div', {
         class: 'tree-row', role: 'button', tabindex: '0',
+        title: label, 'aria-label': label,
         onclick: () => { toggle(key); paint(); },
       },
         h('span', { class: 'twisty' }, icon('chev')),
         h('span', { class: 'tree-label', lang: names.lang() }, bookName(b.id)),
-        h('span', { class: 'tree-aux' }, isCurrent ? `${currentChapter}/${b.chapters}` : String(b.chapters))),
+        // A chapter number is read in the translation's own digits; a bare
+        // count of chapters is a quantity, and stays in the interface's.
+        h('span', { class: 'tree-aux' }, isCurrent
+          ? `${names.number(currentChapter)}/${names.number(b.chapters)}`
+          : String(b.chapters))),
       h('div', { class: 'tree-children grid' }, Array.from({ length: b.chapters }, (_, i) => h('button', {
         class: `ch-chip${isCurrent && i + 1 === currentChapter ? ' is-active' : ''}`,
+        title: names.englishRef(b.id, i + 1), 'aria-label': names.englishRef(b.id, i + 1),
         onclick: () => onOpen(b.id, i + 1),
-      }, String(i + 1)))));
+      }, names.number(i + 1)))));
   }
 
   function toggle(key) {

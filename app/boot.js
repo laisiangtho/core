@@ -19,12 +19,14 @@ import { checkFeatures, createRegistry, createState } from './registry.js';
 import { loadAliases } from './services/aliases.js';
 import { createAnnotations } from './services/annotations.js';
 import { createLibrary, fetchJson } from './services/library.js';
+import { createLangPacks } from './services/langpacks.js';
 import { createRecords } from './services/records.js';
 import { createSearch } from './services/search.js';
 import { createSettings } from './services/settings.js';
-import { openStore } from './services/store.js';
+import { openStore, resetStore } from './services/store.js';
 import { createShell } from './shell/shell.js';
 import { h } from './shell/dom.js';
+import { L } from './shell/i18n.js';
 
 import './styles/shell.css';
 import './styles/views.css';
@@ -40,13 +42,20 @@ export async function start({ root, createPlatform, features, config }) {
   }
 }
 
+/** Replaced by the shell's own notifier once there is a shell to tell. */
+let reportLost = () => {};
+
 async function boot({ root, platform, features, config: overrides }) {
   const config = resolveConfig(overrides);
   checkFeatures(features, platform);
 
   const categoryRaw = await fetchJson(config.categoryUrl, 'category.json');
   const category = parseCategory(categoryRaw);
-  const store = await openStore();
+  // Storage can be taken away mid-session — another window upgrading it, or the
+  // browser reclaiming space. Nothing written after that would land, so the
+  // reader is told once rather than watching every later action fail quietly.
+  let lost = null;
+  const store = await openStore({ onLost: (reason) => { lost = reason; reportLost(reason); } });
   const library = createLibrary({ store, categoryRaw, config });
   await library.load();
 
@@ -69,6 +78,7 @@ async function boot({ root, platform, features, config: overrides }) {
     settings,
     annotations,
     records,
+    langPacks: createLangPacks({ records, config }),
     search: createSearch(),
     state,
     registry,
@@ -81,9 +91,18 @@ async function boot({ root, platform, features, config: overrides }) {
   ctx.shell = createShell(root, ctx);
   Object.freeze(ctx);
 
-  for (const feature of features) feature.setup(ctx);
+  // One feature failing to register is not a reason for the reader to lose the
+  // text. The ones that did register carry on, and the failure is named.
+  const broken = [];
+  for (const feature of features) {
+    try {
+      feature.setup(ctx);
+    } catch (err) {
+      broken.push(`${feature.id}: ${err.message}`);
+    }
+  }
 
-  settings.onError((err) => ctx.shell.notify(`Settings not saved: ${err.message}`, 'error'));
+  settings.onError((err) => ctx.shell.notify(L('msg.settingsNotSaved', { why: err.message }), 'error'));
   // Only the persisted subset travels back into settings; the shell may keep
   // other state (selections, filters) that is not worth remembering.
   const persisted = Object.keys(defaultSettings);
@@ -91,22 +110,59 @@ async function boot({ root, platform, features, config: overrides }) {
     try {
       settings.set(Object.fromEntries(persisted.map((k) => [k, value[k]])));
     } catch (err) {
-      ctx.shell.notify(`Settings not saved: ${err.message}`, 'error');
+      ctx.shell.notify(L('msg.settingsNotSaved', { why: err.message }), 'error');
     }
   });
 
   ctx.shell.start();
   for (const note of settings.notes) ctx.shell.notify(note);
+  for (const note of broken) ctx.shell.notify(L('msg.featureBroken', { what: note }), 'error');
+  if (lost) ctx.shell.notify(lost, 'error');
+  reportLost = (reason) => ctx.shell.notify(L('msg.storageLost', { why: reason }), 'error');
 
+  // The catalog is checked on every start, but only a change is worth saying:
+  // "unchanged" is the answer almost every time, and nobody asked.
   library.checkForUpdates().then(
-    ({ changed }) => { if (changed) ctx.shell.notify('Catalog updated'); },
-    (err) => ctx.shell.notify(`Catalog check failed: ${err.message}`, 'error'),
+    ({ changed }) => { if (changed) ctx.shell.notify(L('lib.catalogChanged')); },
+    (err) => ctx.shell.notify(L('lib.catalogFailed', { why: err.message }), 'error'),
   );
 }
 
+/**
+ * The screen of last resort. It has no shell behind it, so it uses nothing but
+ * the DOM — and it offers the two things that actually recover a start-up
+ * failure: try again, and throw away what is stored.
+ *
+ * Erasing is behind a second press. It takes the reader's notes and bookmarks
+ * with it, so it is never one stray click away.
+ */
 function renderFatal(root, err) {
   const target = root instanceof HTMLElement ? root : document.body;
+  const message = err?.message ?? String(err);
+  const erase = h('button', { class: 'btn' }, 'Erase stored data');
+  let armed = false;
+  erase.addEventListener('click', async () => {
+    if (!armed) {
+      armed = true;
+      erase.classList.add('is-armed');
+      erase.textContent = 'Erase everything and reload — press again';
+      return;
+    }
+    erase.disabled = true;
+    try {
+      await resetStore();
+      location.reload();
+    } catch (e) {
+      erase.disabled = false;
+      erase.textContent = e.message;
+    }
+  });
+
   target.replaceChildren(h('div', { class: 'fatal', role: 'alert' },
     h('h1', {}, 'Lai Siangtho could not start'),
-    h('pre', {}, err?.message ?? String(err))));
+    h('pre', {}, message),
+    h('div', { class: 'fatal-acts' },
+      h('button', { class: 'btn primary', onclick: () => location.reload() }, 'Try again'),
+      erase),
+    h('p', { class: 'fatal-note' }, 'Erasing removes the translations stored on this device, along with notes and bookmarks.')));
 }

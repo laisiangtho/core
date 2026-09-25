@@ -2,7 +2,13 @@
 appId: org.laisiangtho.app
 productName: Lai Siangtho
 # Stamped by scripts/version.mjs; the build number of the day (see app/version.js)
-buildVersion: "5"
+buildVersion: "3"
+# Releases are read by the desktop update check (targets/desktop/electron/ipc.js);
+# both point at the same repository.
+publish:
+  provider: github
+  owner: laisiangtho
+  repo: lai-siangtho
 directories:
   output: release
   buildResources: assets
@@ -11,13 +17,23 @@ files:
   - package.json
 asar: true
 mac:
-  target: dmg
+  target:
+    - dmg
+    - zip
   category: public.app-category.reference
   icon: assets/icon.png
 win:
-  target: nsis
+  target:
+    - nsis
   icon: assets/icon.png
 linux:
-  target: AppImage
+  target:
+    - AppImage
+  # A .deb or .rpm needs a maintainer address in the package metadata, which
+  # goes out with every copy. Add `maintainer: Name <address>` here and the
+  # target alongside AppImage when there is an address to publish.
   category: Education
   icon: assets/icon.png
+  # Without this the desktop environment cannot tie a running window to the
+  # launcher entry, and the app shows as a second, nameless icon.
+  syncDesktopName: true

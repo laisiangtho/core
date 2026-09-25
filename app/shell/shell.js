@@ -7,6 +7,7 @@
 import { createChrome } from './chrome.js';
 import { createModal } from './modal.js';
 import { createNavPop } from './navpop.js';
+import { createTranslationInfo } from './trinfo.js';
 import { createTree } from './tree.js';
 import { createReadingPanel, applyReading } from './readingpanel.js';
 import { createVerseBar } from './versebar.js';
@@ -28,12 +29,20 @@ export function createShell(root, ctx) {
   let verseBar = null;
   let readingPanel = null;
   let navPop = null;
+  let trInfo = null;
   const modal = createModal();
   const strongsPopover = h('div', { class: 'popover', hidden: true });
 
+  const ready = [];
+
   const shell = {
-    notify(message, kind = 'info') {
-      if (chrome) chrome.notify(message, kind);
+    /** Run once the shell is up — a feature cannot open a document before then. */
+    whenReady(fn) {
+      if (chrome) fn();
+      else ready.push(fn);
+    },
+    notify(message, kind = 'info', options = {}) {
+      if (chrome) chrome.notify(message, kind, options);
       else console.error(`[${kind}] ${message}`);
     },
     openDoc: (id) => workspace.openDoc(id),
@@ -52,6 +61,12 @@ export function createShell(root, ctx) {
     openVerse: (book, chapter, verse) => workspace.openVerse(book, chapter, verse),
     selectPane: (side, id) => chrome.selectPane(side, id),
     openStrongs,
+    /** The info button at the end of a crumb bar: what this translation is. */
+    openTranslationInfo: (anchor, meta) => trInfo.open(anchor, meta),
+    repairTranslation,
+    /** The reader's own correction to a translation's text direction. */
+    textDirection: (identify) => workspace.directionOf(identify),
+    setTextDirection: (identify, dir) => workspace.setDirection(identify, dir),
     /** A breadcrumb was pressed: offer its siblings under it. */
     openCrumb: (anchor, mode, at) => navPop.open(anchor, mode, at, (book, chapter) => workspace.openChapter(book, chapter)),
     /** The primary translation finished loading: names may have changed. */
@@ -68,8 +83,15 @@ export function createShell(root, ctx) {
     workspace = createWorkspace(ctx, chrome);
     verseBar = createVerseBar(ctx);
     readingPanel = createReadingPanel(ctx);
-    navPop = createNavPop(ctx, { bookName: (id) => workspace.bookName(id), lang: () => workspace.lang() });
-    document.body.append(modal.element, verseBar.element, readingPanel.element, navPop.element, strongsPopover);
+    navPop = createNavPop(ctx, {
+      bookName: (id) => workspace.bookName(id),
+      lang: () => workspace.lang(),
+      number: (n) => workspace.number(n),
+      english: (id) => workspace.englishBook(id),
+      englishRef: (book, chapter) => workspace.englishRef(book, chapter),
+    });
+    trInfo = createTranslationInfo(ctx);
+    document.body.append(modal.element, verseBar.element, readingPanel.element, navPop.element, trInfo.element, strongsPopover);
     applyReading(ctx.state.get());
     chrome.start();
     wireKeys();
@@ -84,6 +106,14 @@ export function createShell(root, ctx) {
 
     workspace.restore();
     refresh();
+
+    for (const fn of ready.splice(0)) {
+      try {
+        fn();
+      } catch (err) {
+        shell.notify(err.message, 'error');
+      }
+    }
   }
 
   function refresh() {
@@ -92,7 +122,7 @@ export function createShell(root, ctx) {
     chrome.setChapterMode(workspace.activeTab?.kind === 'chapter');
     tree?.paint();
     renderStatus();
-    measureChapter().catch(() => { counts = { words: 0, verses: 0 }; });
+    measureChapter().catch(() => { counts = null; });
     syncHash();
     workspace.render();
   }
@@ -122,6 +152,8 @@ export function createShell(root, ctx) {
     command('reading.mode', L('cmd.mode'), toggleMode, { keys: 'Mod+e', needsChapter: true });
     command('reading.strongs', L('cmd.strongs'), toggleStrongs, { needsChapter: true });
     command('tab.detach', L('cmd.detach'), () => { const tab = workspace.activeTab; if (tab) workspace.detach(tab.id); });
+    command('tab.next', L('cmd.nextTab'), () => stepTab(1), { keys: 'Mod+Shift+ArrowRight' });
+    command('tab.prev', L('cmd.prevTab'), () => stepTab(-1), { keys: 'Mod+Shift+ArrowLeft' });
     command('tab.close', L('cmd.closeTab'), () => { const tab = workspace.activeTab; if (tab) workspace.closeTab(tab.id); }, { keys: 'Mod+w' });
   }
 
@@ -135,16 +167,43 @@ export function createShell(root, ctx) {
       mount(el) {
         tree = createTree(ctx, { onOpen: (book, chapter) => workspace.openChapter(book, chapter) });
         tree.setBookName((id) => workspace.bookName(id));
-        tree.setNames({ testament: (id) => workspace.testamentName(id), lang: () => workspace.lang() });
+        tree.setNames({
+          testament: (id) => workspace.testamentName(id),
+          lang: () => workspace.lang(),
+          number: (n) => workspace.number(n),
+          english: (id) => workspace.englishBook(id),
+          englishTestament: (id) => workspace.englishTestament(id),
+          englishRef: (book, chapter) => workspace.englishRef(book, chapter),
+          has: (id) => workspace.hasBook(id),
+        });
         el.append(tree.element);
         tree.paint();
       },
     });
   }
 
+  /**
+   * Download a translation again over the copy that is here.
+   *
+   * Two different situations end up here: a file corrected upstream without the
+   * catalog's version changing, and a stored copy that is incomplete. The cure
+   * is the same, and the install is a single transaction, so a failed attempt
+   * leaves what is already stored alone.
+   */
+  async function repairTranslation(identify) {
+    shell.notify(L('msg.refreshing', { name: identify }));
+    try {
+      const result = await ctx.library.install(identify);
+      shell.notify(L('msg.refreshed', { name: identify, version: result.version }));
+      workspace.render();
+    } catch (err) {
+      shell.notify(err.message, 'error');
+    }
+  }
+
   async function copyPassage() {
     const { book, chapter, translation } = ctx.state.get();
-    const label = `${workspace.bookName(book)} ${chapter}`;
+    const label = `${workspace.bookName(book)} ${workspace.number(chapter)}`;
     await navigator.clipboard.writeText(`${label} (${translation ?? ''})`.trim());
     shell.notify(L('msg.copied', { what: label }));
   }
@@ -240,10 +299,13 @@ export function createShell(root, ctx) {
     const open = workspace.panes();
     modal.open({
       placeholder: L('ph.translation'),
+      // A translation whose name is in its own script has to be findable by
+      // what the reader can type: its identify and its language, in Latin.
       items: installed.map((t) => ({
         id: t.identify,
         title: `${t.info.shortname} · ${t.info.name}`,
-        sub: [t.info.language.text, t.info.year].filter(Boolean).join(' · ') + (open.includes(t.identify) ? ' · open' : ''),
+        sub: [t.identify, t.info.language.text, t.info.year, open.includes(t.identify) ? L('lbl.openNow') : '']
+          .filter(Boolean).join(' · '),
         icon: 'book',
       })),
       onPick: (item) => workspace.setPaneTranslation(index, item.id),
@@ -256,14 +318,42 @@ export function createShell(root, ctx) {
 
   // --- keyboard -----------------------------------------------------------
 
+  /**
+   * A binding is written as it reads: "Mod+Shift+ArrowRight", where Mod is
+   * Control or Command. Digits are the exception — Mod+1 to Mod+9 go to a tab,
+   * and registering nine commands for that would fill the palette with rows
+   * nobody searches for, so they are handled here and shown on the shortcuts
+   * page as one line.
+   */
   function wireKeys() {
     window.addEventListener('keydown', (e) => {
       if (modal.isOpen || isTyping(e.target)) return;
       const mod = e.ctrlKey || e.metaKey;
-      const combo = `${mod ? 'Mod+' : ''}${e.key.length === 1 ? e.key.toLowerCase() : e.key}`;
+      if (mod && !e.altKey && /^[1-9]$/.test(e.key)) {
+        e.preventDefault();
+        goToTab(Number(e.key));
+        return;
+      }
+      const combo = `${mod ? 'Mod+' : ''}${e.shiftKey ? 'Shift+' : ''}${e.altKey ? 'Alt+' : ''}`
+        + (e.key.length === 1 ? e.key.toLowerCase() : e.key);
       const command = ctx.registry.commands().find((c) => c.keys === combo);
       if (command) { e.preventDefault(); command.run(); }
     });
+  }
+
+  /** Mod+9 is the last tab, however many there are; the rest count from the left. */
+  function goToTab(n) {
+    const { tabs } = workspace;
+    const tab = n === 9 ? tabs.at(-1) : tabs[n - 1];
+    if (tab) workspace.activate(tab.id);
+  }
+
+  /** Round the strip, so the last tab leads back to the first. */
+  function stepTab(delta) {
+    const { tabs, activeTab: current } = workspace;
+    if (tabs.length < 2) return;
+    const at = tabs.findIndex((t) => t.id === current?.id);
+    workspace.activate(tabs[(at + delta + tabs.length) % tabs.length].id);
   }
 
   function isTyping(target) {
@@ -280,7 +370,7 @@ export function createShell(root, ctx) {
    */
   function renderStatus() {
     const { book, chapter, layout, syncScroll, mode, strongs, readingSize } = ctx.state.get();
-    const label = `${workspace.bookName(book)} ${chapter}`;
+    const label = `${workspace.bookName(book)} ${workspace.number(chapter)}`;
     const onChapter = workspace.activeTab?.kind === 'chapter';
     // A control that acts on the chapter is shown but not pressable while a
     // document tab is active, so the bar never claims to describe one.
@@ -296,12 +386,18 @@ export function createShell(root, ctx) {
         h('span', {}, L('app.name'))),
       h('button', { class: 'sb', title: L('cmd.translation'), onclick: () => openTranslationPicker(0) },
         icon('book'), h('span', {}, workspace.primaryName())),
-      chapterOnly(h('button', { class: 'sb', title: L('cmd.switcher'), onclick: () => openSwitcher(book) },
-        icon('book-open'), h('span', { lang: workspace.lang() }, label))),
+      chapterOnly(h('button', {
+        class: 'sb', title: `${workspace.englishRef(book, chapter)} — ${L('cmd.switcher')}`,
+        'aria-label': `${L('cmd.switcher')}: ${workspace.englishRef(book, chapter)}`,
+        onclick: () => openSwitcher(book),
+      }, icon('book-open'), h('span', { lang: workspace.lang() }, label))),
+      // Before any chapter has been measured there is nothing to report, and
+      // "0 words" would be a claim about the passage rather than about the
+      // absence of a measurement.
       h('span', { class: 'sb hide-sm', title: L('lbl.wordsIn', { ref: label }) },
-        icon('quote'), h('span', {}, L('lbl.words', { n: counts.words }))),
+        icon('quote'), h('span', {}, counts ? L('lbl.words', { n: counts.words }) : L('val.unmeasured'))),
       h('span', { class: 'sb hide-sm', title: L('lbl.versesIn', { ref: label }) },
-        icon('lay-list'), h('span', {}, L('lbl.verses', { n: counts.verses }))),
+        icon('lay-list'), h('span', {}, counts ? L('lbl.verses', { n: counts.verses }) : L('val.unmeasured'))),
     ];
     const right = [
       h('button', { class: 'sb sb-reading', onclick: (e) => readingPanel.toggle(e.currentTarget) }, icon('type'), `${readingSize}px · ${L(`val.${layout}`)}`),
@@ -317,19 +413,26 @@ export function createShell(root, ctx) {
   }
 
   /** What the counts in the status bar last measured, and the storage readout. */
-  let counts = { words: 0, verses: 0 };
+  let counts = null;
   let storage = { text: '—', title: '' };
   let countToken = 0;
 
-  /** Measure the chapter in view, then repaint the bar with what it found. */
+  /**
+   * Measure the chapter in view, then repaint the bar with what it found.
+   *
+   * A document tab in front is not a chapter of nothing: the numbers stay as
+   * they were, greyed with the rest of the passage group, rather than dropping
+   * to zero and claiming the chapter is empty.
+   */
   async function measureChapter() {
     const run = ++countToken;
     const { translation, book, chapter } = ctx.state.get();
+    if (workspace.activeTab?.kind !== 'chapter') return;
     const verses = translation ? await store.getChapter(translation, book, chapter) : null;
     if (run !== countToken) return;
     const values = Object.values(verses ?? {});
     const next = { verses: values.length, words: values.reduce((n, v) => n + wordCount(v.text), 0) };
-    if (next.words === counts.words && next.verses === counts.verses) return;
+    if (counts && next.words === counts.words && next.verses === counts.verses) return;
     counts = next;
     renderStatus();
   }
